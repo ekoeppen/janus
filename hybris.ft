@@ -77,7 +77,12 @@ $20001000 t, 0 t, $90 torg
 include parse.ft
 include code.ft
 
-: immediate tlast @ tffa dup tc@ $bf and swap tc! ;
+: postpone  bl parse target-wordlist search-wordlist dup 0= throw
+            swap >body @ swap
+            0< if s" lit" ,tcall t, s" ,call" ,tcall
+               else ,call
+               then ;
+: immediate immediate tlast @ tffa dup tc@ $bf and swap tc! ;
 : if        s" ?branch" ,tcall there tcell tallot ;
 : else      s" branch" ,tcall there tcell tallot there rot t! ;
 : then      there swap t! ;
@@ -86,9 +91,6 @@ include code.ft
 : again     s" branch" ,tcall t, ;
 : until     s" ?branch" ,tcall t, ;
 : repeat    swap s" branch" ,tcall t, there swap t! ;
-: postpone  s" lit" ,tcall
-            t' t,
-            s" ,call" ,tcall ;
 : (         [char] ) word drop ; immediate
 : \         refill drop ; immediate
 : [char]    s" lit" ,tcall char t, ;
