@@ -86,9 +86,9 @@ include code.ft
 : again     s" branch" ,tcall t, ;
 : until     s" ?branch" ,tcall t, ;
 : repeat    swap s" branch" ,tcall t, there swap t! ;
-: postpone  s" lit" tfind ,call
+: postpone  s" lit" ,tcall
             t' t,
-            s" ,call" tfind ,call ;
+            s" ,call" ,tcall ;
 : (         [char] ) word drop ; immediate
 : \         refill drop ; immediate
 : [char]    s" lit" ,tcall char t, ;
@@ -131,14 +131,10 @@ include io.ft
 include utils.ft
 include compiler.ft
 
-code rom-dump   $B500 $6831 $6030 $0008 $0001 $6830 $3604 $B402 $0001 $6830
-                $3604 $B402 $2180 $B402 $BEAB $BD00 end-code
-
-: save          latest @ $84 ! dp @ $88 ! vp $8C !
+: save          save-vars
                 \ 0 0 here s" saved.hex" type-hex
                 0 here rom-dump
                 bye ;
-
 : slist         latest begin @ dup while
                   dup $10 dump dup link>name count type
                 repeat drop ;

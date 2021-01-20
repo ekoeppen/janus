@@ -19,6 +19,9 @@ $0080 constant visible-flag
 : ]             true state ! ;
 : ,call         here cell+ - >branch , ;
 : literal       postpone lit , ; immediate
+
+: compiling?    state @ ;
+: interpreting? state @ 0= ;
 : execute       1+ >r ;
 
 \ -----------------------------------------------------------------------------
@@ -140,11 +143,11 @@ $0080 constant visible-flag
 : source        (source) @ source# @ ;
 : interpret     begin  bl word  dup c@ while      \ textadr
                   find ?dup if                    \ xt 1/-1
-                    1+ state @ 0= or              \ immed or interp?
+                    1+ interpreting? or              \ immed or interp?
                     if execute else ,call then
                   else                            \ textadr
                     ?number if                    \ converted ok
-                      state @ if postpone literal then
+                      compiling? if postpone literal then
                     else count type [char] ? emit cr then  \ error
                   then
                 repeat drop ;

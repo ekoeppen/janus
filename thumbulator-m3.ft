@@ -11,6 +11,10 @@ code wait-key   $2182 $B402 $BEAB $46F7 end-code
 : key       wait-key emulator-uart-rx @ ;
 
 : setup-vars    $84 @ latest ! $88 @ dp ! $8C @ vp ! #16 base ! ;
+: save-vars     latest @ $84 ! dp @ $88 ! vp $8C ! ;
 
 code reset-handler
-            $4668 $3820 $0006 $4801 $6800 $4687 $0080 $0000 end-code
+                $4668 $3820 $0006 $4801 $6800 $4687 $0080 $0000 end-code
+
+code rom-dump   $B500 $6831 $6030 $0008 $0001 $6830 $3604 $B402 $0001 $6830
+                $3604 $B402 $2180 $B402 $BEAB $BD00 end-code
