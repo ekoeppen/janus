@@ -90,22 +90,23 @@ include parse.ft
 : variable  t: $F846 th, $0D04 th, $4800 th, $46F7 th, tvp @ t, tcell tvp +! ;
 : buffer:   t: $F846 th, $0D04 th, $4800 th, $46F7 th, tvp @ t, tvp +! ;
 
+: ,tcall    tfind ,call ;
+
 : immediate tlast @ tffa dup tc@ $bf and swap tc! ;
-: if        [ t' ?branch ] literal ,call there tcell tallot ;
-: else      [ t' branch ] literal ,call there tcell tallot there rot t! ;
+: if        s" ?branch" ,tcall there tcell tallot ;
+: else      s" branch" ,tcall there tcell tallot there rot t! ;
 : then      there swap t! ;
 : begin     there ;
-: while     [ t' ?branch ] literal ,call there tcell tallot ;
-\ : again     [ t' branch ] literal ,call t, ;
-: again     s" branch" tfind ,call t, ;
-: until     [ t' ?branch ] literal ,call t, ;
-: repeat    swap [ t' branch ] literal ,call t, there swap t! ;
+: while     s" ?branch" ,tcall there tcell tallot ;
+: again     s" branch" ,tcall t, ;
+: until     s" ?branch" ,tcall t, ;
+: repeat    swap s" branch" ,tcall t, there swap t! ;
 : postpone  s" lit" tfind ,call
             t' t,
             s" ,call" tfind ,call ;
 : (         [char] ) word drop ; immediate
 : \         refill drop ; immediate
-: [char]    [ t' lit ] literal ,call char t, ;
+: [char]    s" lit" ,tcall char t, ;
 
 : meta:     : ;
 : :         t: ,enter read-word ;
