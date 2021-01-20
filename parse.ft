@@ -1,0 +1,19 @@
+variable word-done
+
+: parse-word    begin  bl word  dup c@ while
+                  find ?dup if
+                    drop execute
+                  else
+                    number? if
+                      [ t' lit ] literal ,call t,
+                    else count type [char] ? emit cr then
+                  then
+                repeat drop ;
+
+: read-word     false word-done ! begin
+                  parse-word
+                  word-done @ if exit then
+                  refill
+                0= until ;
+
+: end-word      true word-done ! ;

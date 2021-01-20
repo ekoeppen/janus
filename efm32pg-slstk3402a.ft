@@ -1,0 +1,27 @@
+\ vim:ft=forth:ts=2:sw=2:expandtab:foldmethod=marker:foldmarker=\\\ --\ ,\\\ ---:
+
+include efm32pg/cmu.ft
+include efm32pg/gpio.ft
+include efm32pg/usart.ft
+
+code reset-handler $4668 $3820 $0006 $4801 $6800 $4687 $0080 $0000 end-code
+
+: emit          USART0_TXDATA c!
+                begin USART0_STATUS @ %100000 and until ;
+: key?          USART0_STATUS @ %10000000 and ;
+: key           begin key? until USART0_RXDATA c@ ;
+
+: init-cmu      %000100000000000000000000 CMU_CTRL bis!
+                %0000000000001000 CMU_HFBUSCLKEN0 bis!
+                %0000000000010000 CMU_HFPERCLKEN0 bis! ;
+: init-gpio     %010000000100000100010100 GPIO_PA_MODEL ! ;
+: init-usart    10304 USART0_CLKDIV !
+                %01100000 USART0_CTRL bis!
+                %000000001111 USART0_ROUTEPEN !
+                %00000000000000000000000000000000 USART0_ROUTELOC0 !
+                %0101 USART0_CMD !
+                %00100000 GPIO_PA_DOUT ! ;
+
+: init-hw       init-cmu init-gpio init-usart ;
+
+: setup-vars    $84 @ latest ! $88 @ dp ! $8C @ vp ! #16 base ! ;

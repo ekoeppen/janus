@@ -1,0 +1,21 @@
+variable code-done
+
+: parse-code    begin  bl word  dup c@ while
+                  find ?dup if
+                    drop execute
+                  else
+                    number? if
+                      th,
+                    else count type [char] ? emit cr then
+                  then
+                repeat drop ;
+
+: read-code     false code-done ! begin
+                  parse-code
+                  code-done @ if exit then
+                  refill
+                0= until ;
+
+: code          t: read-code ;
+
+: end-code      true code-done ! ; immediate

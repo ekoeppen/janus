@@ -1,0 +1,16 @@
+\ vim:ft=forth:ts=2:sw=2:expandtab:foldmethod=marker:foldmarker=\\\ --\ ,\\\ ---:
+
+$E0000000 constant emulator-uart-tx
+$E0000004 constant emulator-uart-rx
+$E0000008 constant emulator-uart-sr
+
+code wait-key   $2182 $B402 $BEAB $46F7 end-code
+
+: key?      emulator-uart-sr @ ;
+: emit      emulator-uart-tx ! ;
+: key       wait-key emulator-uart-rx @ ;
+
+: setup-vars    $84 @ latest ! $88 @ dp ! $8C @ vp ! #16 base ! ;
+
+code reset-handler
+            $4668 $3820 $0006 $4801 $6800 $4687 $0080 $0000 end-code
