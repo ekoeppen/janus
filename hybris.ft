@@ -35,9 +35,10 @@ create #target target# allot
 : tc,       there tc! 1 tallot ;
 : th,       there th! 2 tallot ;
 
-: t'        bl parse target-wordlist search-wordlist 0= throw >body @ ;
 : tfind     target-wordlist search-wordlist 0= throw >body @ ;
+: t'        bl parse tfind ;
 : mcreate   get-current target-wordlist set-current create set-current ;
+
 
 : tffa      tcell + ;
 : tnfa      tcell + 1 + ;
@@ -45,21 +46,12 @@ create #target target# allot
 
 : ,enter    $b500 th, ;
 : ,exit     $bd00 th, ;
-
 : ,call     4 - there -
             dup -$1000000 $1000000 within 0= if call-range-exceeded throw then
             1 #23 lshift 1- and
             dup #12 rshift %0000011111111111 and $F000 or th,
                  #1 rshift %0000011111111111 and $F800 or th, ;
-: ,inline-branch
-            4 - dup
-            -$1000 $1009 within 0= if branch-range-exceeded throw then
-            2/ %0000011111111111 and %1110000000000000 or th, ;
-: ,inline-?branch
-            8 - dup
-            -$200 $200 within 0= if branch-range-exceeded throw then
-            $0001 th, $ce01 th,
-            2/ %0000000011111111 and %1101000000000000 or th, ;
+: ,tcall    tfind ,call ;
 
 : thead     ( b u -- : compile word header into the target image )
             talign
@@ -82,15 +74,8 @@ meta-wordlist >order
 
 $20001000 t, 0 t, $90 torg
 
-include code.ft
-include armv7-m-primitives.ft
 include parse.ft
-
-: constant  t: $F846 th, $0D04 th, $4800 th, $46F7 th, t, ;
-: variable  t: $F846 th, $0D04 th, $4800 th, $46F7 th, tvp @ t, tcell tvp +! ;
-: buffer:   t: $F846 th, $0D04 th, $4800 th, $46F7 th, tvp @ t, tvp +! ;
-
-: ,tcall    tfind ,call ;
+include code.ft
 
 : immediate tlast @ tffa dup tc@ $bf and swap tc! ;
 : if        s" ?branch" ,tcall there tcell tallot ;
@@ -107,6 +92,10 @@ include parse.ft
 : (         [char] ) word drop ; immediate
 : \         refill drop ; immediate
 : [char]    s" lit" ,tcall char t, ;
+
+: constant  t: $F846 th, $0D04 th, $4800 th, $46F7 th, t, ;
+: variable  t: $F846 th, $0D04 th, $4800 th, $46F7 th, tvp @ t, tcell tvp +! ;
+: buffer:   t: $F846 th, $0D04 th, $4800 th, $46F7 th, tvp @ t, tvp +! ;
 
 : meta:     : ;
 : :         t: ,enter read-word ;
@@ -134,6 +123,7 @@ meta-wordlist >order
       variable r0
 
 
+include armv7-m-primitives.ft
 include core.ft
 \ include efm32pg-slstk3402a.ft
 include thumbulator-m3.ft
