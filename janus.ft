@@ -1,13 +1,12 @@
 hex
 
-: binary        $2 base ! ;
-
 include intel-hex.ft
 
 wordlist constant target-wordlist
 wordlist constant meta-wordlist
   $20000 constant target#
        4 constant tcell
+       1 constant call-range-exceeded
 
 variable tdp           0 tdp !
 variable tvp   $20000000 tvp !
@@ -15,9 +14,6 @@ variable tlast         0 tlast !
 
 create #target target# allot
        #target target# -1 fill
-
-1 constant branch-range-exceeded
-2 constant call-range-exceeded
 
 : pack$     dup >r 2dup c! 1+ 2dup + 0 swap ! swap cmove r> ;
 
@@ -39,11 +35,6 @@ create #target target# allot
 : t'        bl parse tfind ;
 : mcreate   get-current target-wordlist set-current create set-current ;
 
-
-: tffa      tcell + ;
-: tnfa      tcell + 1 + ;
-: tcfa      tcell + 1 + dup c@ + taligned ;
-
 : ,enter    $b500 th, ;
 : ,exit     $bd00 th, ;
 : ,call     4 - there -
@@ -58,6 +49,8 @@ create #target target# allot
             there tlast @ t, tlast !
             $ff7f th,
             there #target + pack$ c@ 1+ tallot talign ;
+
+: tflags    tcell + ;
 
 : lookahead ( -- b u : parse a word, but leave it in the input stream )
             >in @ >r bl parse r> >in ! ;
@@ -82,7 +75,7 @@ include code.ft
             0< if s" lit" ,tcall t, s" ,call" ,tcall
                else ,call
                then ;
-: immediate immediate tlast @ tffa dup tc@ $bf and swap tc! ;
+: immediate immediate tlast @ tflags dup tc@ $bf and swap tc! ;
 : if        s" ?branch" ,tcall there tcell tallot ;
 : else      s" branch" ,tcall there tcell tallot there rot t! ;
 : then      there swap t! ;

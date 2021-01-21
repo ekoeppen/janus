@@ -4,7 +4,7 @@
 \ -- Compiler
 
 variable state
-variable current
+
 $0040 constant immediate-flag
 $0080 constant visible-flag
 
@@ -95,9 +95,9 @@ $0080 constant visible-flag
 
 : dodata        $4679 h, $310C h, $3E04 h, $6030 h, $0008 h, $46F7 h, ;
 : dodefer       $4900 h, $468F h, ;
-: create        <builds dodata here , ;
-: constant      <builds docon align , ;
-: variable      <builds docon align vp dup @ dup , cell+ swap ! ;
+: create        <builds dodata here , reveal ;
+: constant      <builds docon align , reveal ;
+: variable      <builds docon align vp dup @ dup , cell+ swap ! reveal ;
 : defer         <builds $46F7 h, 6 allot ; immediate
 : defer!        swap 1+ swap cell+ ! ;
 : is            ' $468F4900 over ! defer! ; immediate
@@ -134,7 +134,7 @@ $0080 constant visible-flag
 : s"            postpone (s")
                 [char] " word dup dup c@ 1+ here swap imove
                 c@ 1+ allot align ; immediate
-\ : ."            postpone s" postpone type ; immediate
+: ."            postpone s" postpone type ; immediate
 
 \ -----------------------------------------------------------------------------
 \ -- Interpreter
