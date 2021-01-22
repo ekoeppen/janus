@@ -34,6 +34,8 @@ create #target target# allot
 : tfind     target-wordlist search-wordlist 0= throw >body @ ;
 : t'        bl parse tfind ;
 : mcreate   get-current target-wordlist set-current create set-current ;
+: lookahead ( -- b u : parse a word, but leave it in the input stream )
+            >in @ >r bl parse r> >in ! ;
 
 : ,enter    $b500 th, ;
 : ,exit     $bd00 th, ;
@@ -51,9 +53,6 @@ create #target target# allot
             there #target + pack$ c@ 1+ tallot talign ;
 
 : tflags    tcell + ;
-
-: lookahead ( -- b u : parse a word, but leave it in the input stream )
-            >in @ >r bl parse r> >in ! ;
 
 : h:        ( -- : create a word with no name in the target dictionary )
             mcreate there , does> @ ,call ;
@@ -112,39 +111,17 @@ meta-wordlist >order
       variable (source)
   $80 buffer:  tib
   $80 constant tib#
-  $7E buffer:  psp
+  $7C buffer:  psp
       variable s0
-  $7E buffer:  rsp
+  $7C buffer:  rsp
       variable r0
 
 
-include armv7-m-primitives.ft
-include core.ft
-\ include efm32pg-slstk3402a.ft
-include thumbulator-m3.ft
-include io.ft
-include utils.ft
-include compiler.ft
-
-: save          save-vars
-                \ 0 0 here s" saved.hex" type-hex
-                0 here rom-dump
-                bye ;
-: slist         latest begin @ dup while
-                  dup $10 dump dup link>name count type
-                repeat drop ;
-: cold          setup-vars abort ;
-
-only forth
-
-t' reset-handler 1+ $00000004 t!
-t' cold             $00000080 t!
-tlast @             $00000084 t!
-tdp @               $00000088 t!
-tvp @               $0000008C t!
+include CoreForth-0/cortex-stc/boards/thumbulator-m3.ft
+\ include CoreForth-0/cortex-stc/boards/nucleo-f103rb.ft
 
 .s cr
 
-0 #target there s" hybris.hex" type-hex
+0 #target there s" janus.hex" type-hex
 
 only forth bye

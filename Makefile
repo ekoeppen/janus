@@ -4,8 +4,8 @@
 %.bin : %.hex
 	arm-eabi-objcopy -I ihex -O binary $< $@
 
-all: hybris.bin hybris.hex
-	hexdump -Cv hybris.bin | tail -15
+all: janus.bin janus.hex
+	hexdump -Cv janus.bin | tail -15
 
 .PHONY: clean
 clean:
