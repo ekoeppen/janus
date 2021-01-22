@@ -33,16 +33,19 @@ variable fd
 : +data     /line bounds do i c@ +2h loop ;
 : mkend     0line s" :00000001FF" $-to-line +eol ;
 : mkline    0line 0sum +start +data +sum +eol ;
-: .lines    ( a u -- ) bounds do i mkline .line /line +loop mkend .line ;
+: .lines    ( a u -- ) bounds do i mkline .line /line +loop .line ;
 
 set-current
 
 
 \ Type an Intel HEX file with target address at a1, and data in a2 u.
 \ Create file with name c-addr n
-: type-hex ( a1 a2 u c-addr n -- )
-  w/o create-file throw fd !
-  rot addr!  base @ >r hex .lines r> base !
-  fd @ close-file throw ;
+: type-hex ( a1 a2 u f -- )
+  fd !
+  rot addr!  base @ >r hex .lines r> base ! ;
+: hex-end  ( start-addr f -- )
+  fd !
+  0line 0sum +: 4 +2h 0 +4h 5 +2h dup #16 rshift +4h +4h +sum +eol .line
+  mkend .line ;
 
 get-order nip 1- set-order
