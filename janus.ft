@@ -7,6 +7,7 @@ wordlist constant meta-wordlist
   $20000 constant target#
        4 constant tcell
        1 constant call-range-exceeded
+       2 constant non-empty-stack
 
 variable tdp           0 tdp !
 variable tvp   $20000000 tvp !
@@ -120,8 +121,12 @@ meta-wordlist >order
 include CoreForth-0/cortex-stc/boards/thumbulator-m3.ft
 \ include CoreForth-0/cortex-stc/boards/nucleo-f103rb.ft
 
-.s cr
 
-0 #target there s" janus.hex" type-hex
+: final     depth if
+              ." Stack not empty: " cr
+              .s cr
+              non-empty-stack throw
+            then ;
 
+final
 only forth bye
