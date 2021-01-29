@@ -1,7 +1,7 @@
 \ Intel HEX format.
 
 get-current
-get-order wordlist dup set-current swap 1+ set-order
+wordlist >order definitions
 
 32 constant /line
 create #line /line 2* 12 + allot
