@@ -6,7 +6,7 @@ variable word-done
                   else
                     number? if
                       s" lit" ,tcall t,
-                    else count type [char] ? emit cr then
+                    else count type [char] ? emit cr -1 throw then
                   then
                 repeat drop ;
 
