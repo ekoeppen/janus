@@ -1,15 +1,24 @@
+\ == Janus ====================================================================
+
+wordlist constant target-wordlist
+wordlist constant meta-wordlist
+
+: ::host::  only forth definitions ;
+: ::meta::  only forth meta-wordlist >order definitions ;
+: ::target::
+            only forth definitions target-wordlist >order meta-wordlist >order ;
+
+\ -- Host ---------------------------------------------------------------------
+
+::host::
+
 hex
 
 include intel-hex.ft
 
-\ -- Generic ------------------------------------------------------------------
-
         0 value trom
         0 value tram
         0 value tcell
-
- wordlist constant target-wordlist
- wordlist constant meta-wordlist
 
         1 constant call-range-exceeded
         2 constant non-empty-stack
@@ -21,10 +30,6 @@ variable tlast 0 tlast !
 
 create #target target# allot
        #target target# -1 fill
-
-: ::meta::  only forth meta-wordlist >order definitions ;
-: ::target::
-            only forth definitions target-wordlist >order meta-wordlist >order ;
 
 : pack$     dup >r 2dup c! 1+ 2dup + 0 swap ! swap cmove r> ;
 
@@ -49,24 +54,12 @@ create #target target# allot
 : lookahead ( -- b u : parse a word, but leave it in the input stream )
             >in @ >r parse-name r> >in ! ;
 
-\ -- Specific -----------------------------------------------------------------
-
-: ,docon    $F846 th, $0D04 th, $4800 th, $46F7 th, ;
-: ,enter    $B500 th, ;
-: ,exit     $BD00 th, ;
-: ,call     4 - there -
-            dup -$1000000 $1000000 within 0= if call-range-exceeded throw then
-            1 #23 lshift 1- and
-            dup #12 rshift %0000011111111111 and $F000 or th,
-                 #1 rshift %0000011111111111 and $F800 or th, ;
-: thead     ( c-addr n -- : compile word header into the target image )
-            talign
-            there tlast @ t, tlast !
-            $ff7f th,
-            there >target pack$ c@ 1+ tallot talign ;
-: timmediate tlast @ tcell + dup tc@ $bf and swap tc! ;
-
-\ -- Generic ------------------------------------------------------------------
+defer ,docon
+defer ,enter
+defer ,exit
+defer ,call
+defer thead
+defer timmediate
 
 : ,tcall    tfind ,call ;
 
@@ -76,6 +69,8 @@ create #target target# allot
 : t:        ( "name", -- : creates a word in the target dictionary )
             lookahead thead h: ;
 : t;        ;
+
+\ -- Meta ---------------------------------------------------------------------
 
 ::meta::
 
@@ -120,45 +115,28 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : :         t: ,enter read-word ;
 meta:       ; ,exit t; end-word ;
 
-\ -- Specific -----------------------------------------------------------------
+\ == Target ===================================================================
 
-::target::
-
-$08000000 to trom
-$20000000 to tram
-        4 to tcell
-
-trom tdp !
-tram tvp !
-
-tram $00001000 + t, 0 t,
-trom $00000400 + torg
-
-      variable base
-      variable hp
-      variable dp
-      variable vp
-      variable latest
-      variable >in
-      variable source#
-      variable (source)
-  $80 buffer:  tib
-  $80 constant tib#
-  $7C buffer:  psp
-      variable s0
-  $7C buffer:  rsp
-      variable r0
-
-include CoreForth-0/cortex-stc/boards/thumbulator-m3.ft
+\ include CoreForth-0/cortex-stc/boards/thumbulator-m3.ft
 \ include CoreForth-0/cortex-stc/boards/nucleo-f103rb.ft
+include CoreForth-0/msp430/boards/msp-exp430g2.ft
 
 \ -- Generic ------------------------------------------------------------------
 
+::host::
+
+: tlist     target-wordlist >order
+            context @ 8 + begin @ dup while
+              dup name>int >body @ 8 u.r space dup id. cr
+            repeat
+            previous ;
 : final     depth if
               ." Stack not empty: " cr
               .s cr
               non-empty-stack throw
-            then ;
+            then
+            ." Words" cr tlist ;
 
 final
-only forth bye
+
+bye
