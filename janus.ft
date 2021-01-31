@@ -39,7 +39,7 @@ create #target target# allot
 : taligned  tcell 1- + tcell negate and ;
 : talign    there taligned tdp ! ;
 : tallot    tdp +! ;
-: t!        >target l! ;
+: t!        >target tcell 4 = if l! else w! then ;
 : tc@       >target c@ ;
 : t@        >target l@ ;
 : tc!       >target c! ;
