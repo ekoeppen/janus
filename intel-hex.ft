@@ -3,7 +3,7 @@
 get-current
 wordlist >order definitions
 
-32 constant /line
+#32 constant /line
 create #line /line 2* 12 + allot
 variable >line
 variable sum
@@ -33,7 +33,7 @@ variable fd
 : +data     /line bounds do i c@ +2h loop ;
 : mkend     0line s" :00000001FF" $-to-line +eol ;
 : mkline    0line 0sum +start +data +sum +eol ;
-: .lines    ( a u -- ) bounds do i mkline .line /line +loop .line ;
+: .lines    ( a u -- ) bounds do i mkline .line /line +loop ;
 
 set-current
 
