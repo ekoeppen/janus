@@ -42,7 +42,7 @@ set-current
 : type-hex ( a1 a2 u f -- )
             fd !
             rot dup $0000FFFF and addr!
-            0line 0sum +: 2 +2h 0 +4h 2 +2h #16 rshift +4h +sum +eol .line
+            0line 0sum +: 2 +2h 0 +4h 4 +2h #16 rshift +4h +sum +eol .line
             base @ >r hex
             .lines
             r> base ! ;
