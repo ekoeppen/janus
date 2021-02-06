@@ -131,25 +131,11 @@ meta:       ; ,exit t; end-word ;
 
 \ == Target ===================================================================
 
-\ include CoreForth-0/cortex-stc/boards/thumbulator-m3.ft
-\ include CoreForth-0/cortex-stc/boards/nucleo-f103rb.ft
-include CoreForth-0/msp430/boards/msp-exp430g2.ft
+next-arg included
 
 \ -- Generic ------------------------------------------------------------------
 
 ::host::
-
-: tlist     target-wordlist >order
-            context @ 8 + begin @ dup while
-              dup name>int >body @ 8 u.r space dup id. cr
-            repeat
-            previous ;
-: final     depth if
-              ." Stack not empty: " cr
-              .s cr
-              non-empty-stack throw
-            then
-            ." Words" cr tlist ;
 
 final
 
