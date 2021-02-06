@@ -53,6 +53,18 @@ create #target target# allot
 : mcreate   get-current target-wordlist set-current create set-current ;
 : lookahead ( -- b u : parse a word, but leave it in the input stream )
             >in @ >r parse-name r> >in ! ;
+: tlist     target-wordlist >order
+            context @ 8 + begin @ dup while
+              dup name>int >body @ 8 u.r space dup id. cr
+            repeat
+            previous ;
+: final     depth if
+              ." Stack not empty: " cr
+              .s cr
+              non-empty-stack throw
+            then
+            tlist
+            ;
 
 defer ,docon
 defer ,enter
