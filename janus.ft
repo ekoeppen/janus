@@ -71,6 +71,7 @@ defer ,enter
 defer ,exit
 defer ,call
 defer thead
+defer tlink>
 defer timmediate
 
 : ,tcall    tfind ,call ;
@@ -104,10 +105,11 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : else      s" branch" ,tcall there tcell tallot there rot t! ;
 : then      there swap t! ;
 : begin     there ;
-: while     s" ?branch" ,tcall there tcell tallot ;
+: while     s" ?branch" ,tcall there tcell tallot swap ;
 : again     s" branch" ,tcall t, ;
 : until     s" ?branch" ,tcall t, ;
-: repeat    swap s" branch" ,tcall t, there swap t! ;
+: repeat    s" branch" ,tcall t, there swap t! ;
+: recurse   tlast @ tlink> ,call ;
 : do        s" (do)" ,tcall there ;
 : loop      s" (loop)" ,tcall s" ?branch" ,tcall t, ;
 : (         [char] ) word drop ;
