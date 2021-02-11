@@ -68,6 +68,7 @@ create #target target# allot
 
 defer ,docon
 defer ,enter
+defer ,next
 defer ,exit
 defer ,call
 defer thead

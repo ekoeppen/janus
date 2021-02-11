@@ -18,4 +18,4 @@ variable code-done
 
 : code          t: read-code ;
 
-: end-code      true code-done ! ; immediate
+: end-code      ,next true code-done ! ; immediate

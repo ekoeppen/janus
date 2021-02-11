@@ -1,7 +1,8 @@
-BOARD ?= CoreForth-0/cortex-stc/boards/thumbulator-m3.ft
+BOARD ?= CoreForth-0/cortex/boards/thumbulator-m3.ft
+THREADING ?= stc
 
 %.hex : %.ft
-	gforth $< $(BOARD)
+	gforth $< $(BOARD) $(THREADING)
 
 %.bin : %.hex
 	arm-eabi-objcopy -I ihex -O binary $< $@
