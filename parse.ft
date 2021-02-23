@@ -5,7 +5,7 @@ variable word-done
                     drop execute
                   else
                     number? if
-                      s" lit" ,tcall t,
+                      t,lit t,
                     else count type [char] ? emit cr -1 throw then
                   then
                 repeat drop ;

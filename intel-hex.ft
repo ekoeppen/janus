@@ -4,7 +4,7 @@ get-current
 wordlist >order definitions
 
 #32 constant /line
-create #line /line 2* 12 + allot
+create #line /line 2* $12 + allot
 variable >line
 variable sum
 variable addr
@@ -42,14 +42,16 @@ set-current
 : type-hex ( a1 a2 u f -- )
             fd !
             rot dup $0000FFFF and addr!
-            0line 0sum +: 2 +2h 0 +4h 4 +2h #16 rshift +4h +sum +eol .line
             base @ >r hex
+            0line 0sum +: 2 +2h 0 +4h 4 +2h #16 rshift +4h +sum +eol .line
             .lines
             r> base ! ;
 
 : hex-end  ( start-addr f -- )
             fd !
+            base @ >r hex
             0line 0sum +: 4 +2h 0 +4h 5 +2h dup #16 rshift +4h +4h +sum +eol .line
-            mkend .line ;
+            mkend .line
+            r> base ! ;
 
 previous

@@ -50,6 +50,7 @@ create #target target# allot
 
 : tfind     target-wordlist search-wordlist 0= throw >body @ ;
 : t'        parse-name tfind ;
+: [t']      t' postpone literal ; immediate
 : mcreate   get-current target-wordlist set-current create set-current ;
 : lookahead ( -- b u : parse a word, but leave it in the input stream )
             >in @ >r parse-name r> >in ! ;
@@ -66,19 +67,22 @@ create #target target# allot
             tlist
             ;
 
-defer ,docon
-defer ,enter
-defer ,next
-defer ,exit
-defer ,call
+defer t,docon
+defer t,enter
+defer t,next
+defer t,exit
+defer t,call
+defer t,lit
+defer t,branch
+defer t,?branch
 defer thead
 defer tlink>
 defer timmediate
 
-: ,tcall    tfind ,call ;
+: tfwdref    tfind t,call ;
 
 : h:        ( -- : create a word with no name in the target dictionary )
-            mcreate there , does> @ ,call ;
+            mcreate there , does> @ t,call ;
 
 : t:        ( "name", -- : creates a word in the target dictionary )
             lookahead thead h: ;
@@ -99,42 +103,47 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 
 : postpone  parse-name target-wordlist search-wordlist dup 0= throw
             swap >body @ swap
-            0< if s" lit" ,tcall t, s" ,call" ,tcall
-               else ,call
+            0< if t,lit t, s" ,call" tfwdref
+               else t,call
                then ;
-: if        s" ?branch" ,tcall there tcell tallot ;
-: else      s" branch" ,tcall there tcell tallot there rot t! ;
+: if        t,?branch there tcell tallot ;
+: else      t,branch there tcell tallot there rot t! ;
 : then      there swap t! ;
 : begin     there ;
-: while     s" ?branch" ,tcall there tcell tallot swap ;
-: again     s" branch" ,tcall t, ;
-: until     s" ?branch" ,tcall t, ;
-: repeat    s" branch" ,tcall t, there swap t! ;
-: recurse   tlast @ tlink> ,call ;
-: do        s" (do)" ,tcall there ;
-: loop      s" (loop)" ,tcall s" ?branch" ,tcall t, ;
+: while     t,?branch there tcell tallot swap ;
+: again     t,branch t, ;
+: until     t,?branch t, ;
+: repeat    t,branch t, there swap t! ;
+: ahead     t,branch there tcell tallot ;
+: does>     s" (does>)" tfwdref ; immediate
+: for       s" >r" tfwdref there ; immediate
+: next      s" (next)" tfwdref t, ; immediate
+: aft       drop t,branch there tcell tallot there swap ;
+: recurse   tlast @ tlink> t,call ;
+: do        s" (do)" tfwdref there ;
+: loop      s" (loop)" tfwdref t,?branch t, ;
 : (         [char] ) word drop ;
 : \         refill drop ;
-: [']       s" lit" ,tcall t' t, ;
-: [char]    s" lit" ,tcall char t, ;
-: s"        (squote)$ 4 ,tcall
+: [']       t,lit t' t, ;
+: [char]    t,lit char t, ;
+: s"        (squote)$ 4 tfwdref
             $22 word dup dup c@ 1+ there #target + trom - swap cmove
             c@ 1+ tallot talign ;
-: ."        s" type$ ,tcall ;
+: ."        s" type$ tfwdref ;
 
-: constant  t: ,docon t, ;
-: variable  t: ,docon tvp @ t, tcell tvp +! ;
-: buffer:   t: ,docon tvp @ t, tvp +! ;
+: constant  t: t,docon t, ;
+: variable  t: t,docon tvp @ t, tcell tvp +! ;
+: buffer:   t: t,docon tvp @ t, tvp +! ;
 
 : meta:     : ;
-: :         t: ,enter read-word ;
-meta:       ; ,exit t; end-word ;
+: :         t: t,enter read-word ;
+meta:       ; t,exit t; end-word ;
 
 \ == Target ===================================================================
 
 next-arg included
 
-\ -- Generic ------------------------------------------------------------------
+\ -- Host ---------------------------------------------------------------------
 
 ::host::
 
