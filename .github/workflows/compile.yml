@@ -42,4 +42,4 @@ jobs:
       - name: Test p3216
         working-directory: /home/user/janus
         run: |
-          ./CoreForth-0/p3216/test.sh | p3216 p3216.bin
+          ./CoreForth-0/tests/test.sh | p3216 p3216.bin
