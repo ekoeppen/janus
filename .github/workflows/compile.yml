@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  test:
     environment: build
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: /home/user
     container:
-      image: docker.pkg.github.com/ekoeppen/gforth-docker/gforth:0.7.3
+      image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.ghcr_read }}
@@ -32,10 +32,14 @@ jobs:
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft dtc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft stc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft dtc
-      - name: Save build artifacts
+      - name: Save CoreForth-0
         uses: actions/upload-artifact@v2
         with:
           name: CoreForth-0
           path: |
             /home/user/janus/*.bin
             /home/user/janus/*.hex
+      - name: Test p3216
+        working-directory: /home/user/janus
+        run: |
+          ./CoreForth-0/p3216/test.sh | p3216 p3216.bin
