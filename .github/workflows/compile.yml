@@ -1,0 +1,32 @@
+name: Compile
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    environment: build
+    runs-on: ubuntu-latest
+    container:
+      image: docker.pkg.github.com/ekoeppen/gforth-docker/gforth:0.7.3
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.ghcr_read }}
+    steps:
+      - name: Checkout
+        run: |
+          git clone --recursive https://github.com/${{ github.repository }}.git /tmp/janus
+          cd /tmp/janus && git reset --hard ${{ github.sha }}
+      - name: Compile p3212
+        run: cd /tmp/janus && /opt/bin/gforth janus.ft CoreForth-0/p3216/p3216.ft
+      - name: Save build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: janus
+          path: |
+            /tmp/janus/*.bin
+            /tmp/janus/*.hex
