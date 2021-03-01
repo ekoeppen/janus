@@ -1,0 +1,23 @@
+FROM alpine:3.13 as dev
+RUN apk add --no-cache gcc libc-dev make diffutils m4 emacs rust cargo
+
+WORKDIR /build
+
+RUN wget http://ftp.funet.fi/pub/gnu/prep/gforth/gforth-0.7.3.tar.gz && tar xf gforth-0.7.3.tar.gz
+RUN cd gforth-0.7.3 && CFLAGS='-std=gnu99' ./configure \
+		--prefix=/usr/local \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--without-check
+RUN cd gforth-0.7.3 && make && make install
+
+RUN wget -O - https://github.com/ekoeppen/p3216/archive/v1.1.0.tar.gz | tar xfz -
+RUN cd p3216-1.1.0 && cargo build --release
+
+RUN wget -O - https://github.com/ekoeppen/thumbulator/archive/v1.0.0.tar.gz | tar xfz -
+RUN cd thumbulator-1.0.0 && make && cp thumbulator /usr/local/bin
+
+FROM alpine:3.13 as base
+RUN apk add --no-cache libgcc git
+COPY --from=dev /usr/local /usr/local
+COPY --from=dev /build/p3216-1.1.0/target/release/p3216 /usr/bin/p3216
