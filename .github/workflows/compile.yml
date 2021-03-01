@@ -7,7 +7,7 @@ jobs:
     environment: build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}/janus:latest
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.ghcr_read }}
