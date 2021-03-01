@@ -19,6 +19,7 @@ jobs:
       - name: Compile
         run: |
           gforth janus.ft CoreForth-0/p3216/p3216.ft
+          gforth janus.ft CoreForth-0/msp430/boards/msp-exp430g2.ft
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft stc
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft dtc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft stc
