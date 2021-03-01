@@ -1,19 +1,11 @@
 name: Compile
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   test:
     environment: build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: /home/user
     container:
       image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
@@ -21,11 +13,10 @@ jobs:
         password: ${{ secrets.ghcr_read }}
     steps:
       - name: Checkout
-        run: |
-          git clone --recursive https://github.com/${{ github.repository }}.git janus
-          cd janus && git reset --hard ${{ github.sha }}
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Compile
-        working-directory: /home/user/janus
         run: |
           gforth janus.ft CoreForth-0/p3216/p3216.ft
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft stc
@@ -40,6 +31,5 @@ jobs:
             /home/user/janus/*.bin
             /home/user/janus/*.hex
       - name: Test p3216
-        working-directory: /home/user/janus
         run: |
           ./CoreForth-0/tests/test.sh | p3216 p3216.bin
