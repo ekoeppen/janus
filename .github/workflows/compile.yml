@@ -20,6 +20,7 @@ jobs:
         run: |
           gforth janus.ft CoreForth-0/p3216/p3216.ft
           gforth janus.ft CoreForth-0/msp430/boards/msp-exp430g2.ft
+          gforth janus.ft CoreForth-0/msp430/boards/msp430-emu.ft
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft stc
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft dtc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft stc
@@ -49,3 +50,7 @@ jobs:
         working-directory: CoreForth-0
         run: |
           sh ./CoreForth-0/tests/test.sh | p3216 p3216.bin
+      - name: Test MSP430
+        working-directory: CoreForth-0
+        run: |
+          sh ./CoreForth-0/tests/test.sh | msp430-emu -r -m 1000 -b msp430-emu-info.bin -m 4000 -b msp430-emu-main.bin -m ffc0 -b msp430-emu-vectors.bin
