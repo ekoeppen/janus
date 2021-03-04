@@ -67,3 +67,21 @@ jobs:
         working-directory: CoreForth-0
         run: |
           sh ./CoreForth-0/tests/test.sh | msp430-emu -r -m 1000 -b msp430-emu-info.bin -m 4000 -b msp430-emu-main.bin -m ffc0 -b msp430-emu-vectors.bin
+
+  test-cortex-m3-stc:
+    environment: build
+    runs-on: ubuntu-latest
+    if: false
+    needs: build
+    container:
+      image: ghcr.io/ekoeppen/janus/janus:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.ghcr_read }}
+    steps:
+      - name: Get artifacts
+        uses: actions/download-artifact@v2
+      - name: Test
+        working-directory: CoreForth-0
+        run: |
+          sh ./CoreForth-0/tests/test.sh | thumbulator -d thumbulator-m3-stc.bin
