@@ -14,8 +14,8 @@ RUN cd gforth-0.7.3 && make && make install
 RUN wget -O - https://github.com/ekoeppen/p3216/archive/v1.1.0.tar.gz | tar xfz -
 RUN cd p3216-1.1.0 && cargo build --release
 
-RUN wget -O - https://github.com/ekoeppen/thumbulator/archive/v1.0.0.tar.gz | tar xfz -
-RUN cd thumbulator-1.0.0 && make && cp thumbulator /usr/local/bin
+RUN wget -O - https://github.com/ekoeppen/thumbulator/archive/v1.1.0.tar.gz | tar xfz -
+RUN cd thumbulator-1.1.0 && make && cp thumbulator /usr/local/bin
 
 RUN wget -O - https://github.com/ekoeppen/MSP430-Emulator/archive/v1.0.0.tar.gz | tar xfz -
 RUN cd MSP430-Emulator-1.0.0 && make && make install
