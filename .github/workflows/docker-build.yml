@@ -1,6 +1,10 @@
 name: Build CI Docker image
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - docker/ci/Dockerfile
 
 jobs:
   build:
