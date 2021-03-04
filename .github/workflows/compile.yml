@@ -71,7 +71,6 @@ jobs:
   test-cortex-m3-stc:
     environment: build
     runs-on: ubuntu-latest
-    if: false
     needs: build
     container:
       image: ghcr.io/ekoeppen/janus/janus:latest
