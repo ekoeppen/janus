@@ -34,7 +34,7 @@ jobs:
             *.bin
             *.hex
 
-  test:
+  test-p3216:
     environment: build
     runs-on: ubuntu-latest
     needs: build
@@ -46,11 +46,24 @@ jobs:
     steps:
       - name: Get artifacts
         uses: actions/download-artifact@v2
-      - name: Test p3216
+      - name: Test
         working-directory: CoreForth-0
         run: |
           sh ./CoreForth-0/tests/test.sh | p3216 p3216.bin
-      - name: Test MSP430
+
+  test-msp430:
+    environment: build
+    runs-on: ubuntu-latest
+    needs: build
+    container:
+      image: ghcr.io/ekoeppen/janus/janus:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.ghcr_read }}
+    steps:
+      - name: Get artifacts
+        uses: actions/download-artifact@v2
+      - name: Test
         working-directory: CoreForth-0
         run: |
           sh ./CoreForth-0/tests/test.sh | msp430-emu -r -m 1000 -b msp430-emu-info.bin -m 4000 -b msp430-emu-main.bin -m ffc0 -b msp430-emu-vectors.bin
