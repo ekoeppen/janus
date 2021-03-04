@@ -1,5 +1,5 @@
 FROM alpine:3.13 as dev
-RUN apk add --no-cache gcc libc-dev make diffutils m4 emacs rust cargo
+RUN apk add --no-cache gcc libc-dev make diffutils m4 emacs rust cargo readline-dev linux-headers musl-dev
 
 WORKDIR /build
 
@@ -17,7 +17,10 @@ RUN cd p3216-1.1.0 && cargo build --release
 RUN wget -O - https://github.com/ekoeppen/thumbulator/archive/v1.0.0.tar.gz | tar xfz -
 RUN cd thumbulator-1.0.0 && make && cp thumbulator /usr/local/bin
 
+RUN wget -O - https://github.com/ekoeppen/MSP430-Emulator/archive/v1.0.0.tar.gz | tar xfz -
+RUN cd MSP430-Emulator-1.0.0 && make && make install
+
 FROM alpine:3.13 as base
-RUN apk add --no-cache libgcc git
+RUN apk add --no-cache libgcc git readline
 COPY --from=dev /usr/local /usr/local
 COPY --from=dev /build/p3216-1.1.0/target/release/p3216 /usr/bin/p3216
