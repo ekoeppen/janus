@@ -97,7 +97,7 @@ include code.ft
 
 create squote$ char s c, char " c,
 create (squote)$ char ( c, char s c, char " c, char ) c,
-: type$     s" type";
+: type$     s" type" ;
 
 : immediate immediate timmediate ;
 
