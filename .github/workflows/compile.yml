@@ -25,6 +25,8 @@ jobs:
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft dtc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft stc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft dtc
+          gforth janus.ft CoreForth-0/cortex/boards/nucleo-f303re.ft stc
+          gforth janus.ft CoreForth-0/cortex/boards/nucleo-f303re.ft dtc
       - name: Save CoreForth-0
         uses: actions/upload-artifact@v2
         with:
