@@ -68,9 +68,11 @@ create #target target# allot
             ;
 
 defer t,docon
+defer t,doirq
 defer t,enter
 defer t,next
 defer t,exit
+defer t,irqexit
 defer t,call
 defer t,lit
 defer t,branch
@@ -134,6 +136,8 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : constant  t: t,docon t, ;
 : variable  t: t,docon tvp @ t, tcell tvp +! ;
 : buffer:   t: t,docon tvp @ t, tvp +! ;
+: i:        t: t,doirq read-word ;
+: ;i        t,irqexit t; end-word ;
 
 : meta:     : ;
 : :         t: t,enter read-word ;
