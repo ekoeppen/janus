@@ -21,8 +21,12 @@ jobs:
           gforth janus.ft CoreForth-0/p3216/p3216.ft
           gforth janus.ft CoreForth-0/msp430/boards/msp-exp430g2.ft
           gforth janus.ft CoreForth-0/msp430/boards/msp430-emu.ft
+          gforth janus.ft CoreForth-0/cortex/boards/thumbulator.ft stc
+          gforth janus.ft CoreForth-0/cortex/boards/thumbulator.ft dtc
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft stc
           gforth janus.ft CoreForth-0/cortex/boards/thumbulator-m3.ft dtc
+          gforth janus.ft CoreForth-0/cortex/boards/nucleo-f072rb.ft stc
+          gforth janus.ft CoreForth-0/cortex/boards/nucleo-f072rb.ft dtc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft stc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f103rb.ft dtc
           gforth janus.ft CoreForth-0/cortex/boards/nucleo-f303re.ft stc
@@ -69,6 +73,40 @@ jobs:
         working-directory: CoreForth-0
         run: |
           sh ./CoreForth-0/tests/test.sh | msp430-emu -r -m 1000 -b msp430-emu-info.bin -m 4000 -b msp430-emu-main.bin -m ffc0 -b msp430-emu-vectors.bin
+
+  test-cortex-m0-stc:
+    environment: build
+    runs-on: ubuntu-latest
+    needs: build
+    container:
+      image: ghcr.io/ekoeppen/janus/janus:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.ghcr_read }}
+    steps:
+      - name: Get artifacts
+        uses: actions/download-artifact@v2
+      - name: Test
+        working-directory: CoreForth-0
+        run: |
+          sh ./CoreForth-0/tests/test.sh | thumbulator -d thumbulator-stc.bin
+
+  test-cortex-m0-dtc:
+    environment: build
+    runs-on: ubuntu-latest
+    needs: build
+    container:
+      image: ghcr.io/ekoeppen/janus/janus:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.ghcr_read }}
+    steps:
+      - name: Get artifacts
+        uses: actions/download-artifact@v2
+      - name: Test
+        working-directory: CoreForth-0
+        run: |
+          sh ./CoreForth-0/tests/test.sh | thumbulator -d thumbulator-dtc.bin
 
   test-cortex-m3-stc:
     environment: build
