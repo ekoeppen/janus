@@ -64,7 +64,7 @@ create #target target# allot
               .s cr
               non-empty-stack throw
             then
-            tlist
+            cr tlist
             ;
 
 defer t,docon
