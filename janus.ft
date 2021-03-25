@@ -8,6 +8,24 @@ wordlist constant meta-wordlist
 : ::target::
             only forth definitions target-wordlist >order meta-wordlist >order ;
 
+0 constant STC
+1 constant DTC
+2 constant ITC
+
+  create source-file $400 allot
+  create tether-port $400 allot
+  create tether-speed $10 allot
+variable threading-type
+
+       STC threading-type !
+         0 tether-port c!
+s" 115200" tether-speed place
+         0 source-file c!
+
+include args.ft
+
+parse-args
+
 \ -- Host ---------------------------------------------------------------------
 
 ::host::
@@ -145,7 +163,7 @@ meta:       ; t,exit t; end-word ;
 
 \ == Target ===================================================================
 
-next-arg included
+source-file count included
 
 \ -- Host ---------------------------------------------------------------------
 
