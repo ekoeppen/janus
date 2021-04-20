@@ -18,4 +18,4 @@ command line switches are defined:
 
 DTC CoreForth-0 for the Nucleo-F072RB board is for example compiled with
 
-    gforth janus.ft -f CoreForth-0/boards/nucleo_f072rb --dtc
+    gforth janus.ft -f CoreForth-0/boards/nucleo-f072rb --dtc
