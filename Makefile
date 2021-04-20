@@ -1,14 +1,14 @@
-BOARD ?= CoreForth-0/cortex/boards/thumbulator-m3.ft
+TARGET ?= cortex
+BOARD ?= thumbulator-m3
 THREADING ?= stc
 
-%.hex : %.ft
-	gforth $< $(BOARD) $(THREADING)
+SRC = CoreForth-0/$(TARGET)/boards/$(BOARD).ft
+HEX = $(BOARD)-$(THREADING).hex
 
-%.bin : %.hex
-	arm-eabi-objcopy -I ihex -O binary $< $@
+$(HEX) : $(SRC) janus.ft
+	gforth janus.ft -f $(SRC) --$(THREADING)
 
-all: janus.bin janus.hex
-	# hexdump -Cv janus.bin | tail -15
+all: $(HEX)
 
 .PHONY: clean
 clean:
