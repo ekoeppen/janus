@@ -13,6 +13,7 @@ wordlist constant meta-wordlist
 2 constant ITC
 
   create source-file $400 allot
+variable tethered
   create tether-port $400 allot
   create tether-speed $10 allot
 variable threading-type
@@ -38,9 +39,8 @@ include intel-hex.ft
         0 value tram
         0 value tcell
 
-        1 constant call-range-exceeded
         2 constant non-empty-stack
-$00080000 constant target#
+$00010000 constant target#
 
 variable tdp
 variable tvp
@@ -65,8 +65,13 @@ create #target target# allot
 : t,        there t! tcell tallot ;
 : tc,       there tc! 1 tallot ;
 : th,       there th! 2 tallot ;
+: talloc    trom tram <> if tvp @ t, tvp +!
+            else there tcell + t, tallot
+            then ;
 
-: tfind     target-wordlist search-wordlist 0= throw >body @ ;
+: tdump     #target there dump ;
+: (tfind)   target-wordlist search-wordlist ;
+: tfind     (tfind) 0= throw >body @ ;
 : t'        parse-name tfind ;
 : [t']      t' postpone literal ; immediate
 : mcreate   get-current target-wordlist set-current create set-current ;
@@ -75,7 +80,7 @@ create #target target# allot
 : tlist     target-wordlist >order
             context @ 8 + begin @ dup while
               dup name>int >body @ 8 u.r space dup id. cr
-            repeat
+            repeat drop
             previous ;
 : final     depth if
               ." Stack not empty: " cr
@@ -152,8 +157,8 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : ."        s" type$ tfwdref ;
 
 : constant  t: t,docon t, ;
-: variable  t: t,docon tvp @ t, tcell tvp +! ;
-: buffer:   t: t,docon tvp @ t, tvp +! ;
+: variable  t: t,docon tcell talloc ;
+: buffer:   t: t,docon talloc ;
 : i:        t: t,doirq read-word ;
 : ;i        t,irqexit t; end-word ;
 

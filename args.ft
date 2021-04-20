@@ -3,7 +3,10 @@
                 else exit then then
                 threading-type !  ;
 
-: set-tethered  dup arg s" --tethered" compare 0= if
+: set-tethered  dup arg s" --tethered" compare 0= if true tethered ! then ;
+
+: set-tether-port
+                dup arg s" --port" compare 0= if
                   1+ dup arg dup tether-port tuck c! 1+ swap move
                 then ;
 
@@ -20,6 +23,7 @@
 : parse-args    0 begin dup argc @ < while
                   set-threading
                   set-tethered
+                  set-tether-port
                   set-tether-speed
                   set-source-file
                   1+
@@ -29,4 +33,4 @@
 : ::stc::       threading-type @ STC <> if postpone \ then ;
 : ::dtc::       threading-type @ DTC <> if postpone \ then ;
 : ::itc::       threading-type @ ITC <> if postpone \ then ;
-: ::tethered::  tether-port c@ 0= if postpone \ then ;
+: ::tethered::  tethered @ 0= if postpone \ then ;
