@@ -1,0 +1,238 @@
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+[../../../tether.ft](../../../tether.ft.md)
+
+[../janus/compiler.ft](../janus/compiler.ft.md)
+
+
+-- Target -------------------------------------------------------------------
+
+    ::target::
+
+    $08000000 to trom
+    $20000000 to tram
+            4 to tcell
+
+    trom tdp !
+    tram tvp !
+
+    tram $00001000 + t, 0 t,
+    trom $00000400 + torg
+
+    ::dtc::   $10 buffer: #docol
+    ::dtc::   $10 buffer: #dodoes
+             $1FC buffer: psp
+                 variable s0
+             $1FC buffer: rsp
+                 variable r0
+
+              $40 buffer: rxb
+                 variable rx-head
+                 variable rx-tail
+
+              $40 buffer: txb
+                 variable tx-head
+                 variable tx-tail
+
+
+[../cpus/cortex-m3/armv7-m-primitives.ft](../cpus/cortex-m3/armv7-m-primitives.ft.md)
+
+    ::stc:: include ../cpus/cortex-m3/threading-stc.ft
+    ::dtc:: include ../cpus/cortex-m3/threading-dtc.ft
+[../common/core.ft](../common/core.ft.md)
+
+[../../common/core.ft](../../common/core.ft.md)
+
+
+[../cpus/stm32f10x/rcc.ft](../cpus/stm32f10x/rcc.ft.md)
+
+[../cpus/stm32f10x/flash.ft](../cpus/stm32f10x/flash.ft.md)
+
+[../cpus/stm32f10x/gpio.ft](../cpus/stm32f10x/gpio.ft.md)
+
+[../cpus/stm32f10x/usart.ft](../cpus/stm32f10x/usart.ft.md)
+
+[../cpus/cortex-m3/nvic.ft](../cpus/cortex-m3/nvic.ft.md)
+
+[../dictionary/common.ft](../dictionary/common.ft.md)
+
+
+    : rbuf-ptr@    @ + c@ ;
+    : rbuf-ptr!    @ + c! ;
+    : rbuf-ptr++   dup @ 1+ $3F and swap ! ;
+
+    : txb-empty?     tx-head @ tx-tail @ xor not ;
+    : rxb-empty?     rx-head @ rx-tail @ xor not ;
+
+    : !txb-empty?    tx-head @ tx-tail @ xor ;
+    : !rxb-empty?    rx-head @ rx-tail @ xor ;
+
+    : usart2-tx-handler
+                    %10000000 USART2_SR bit@ !txb-empty? and if
+                      txb tx-tail rbuf-ptr@ USART2_DR !
+                      tx-tail rbuf-ptr++
+                    else
+                     %10000000 USART2_CR1 bic!
+                    then
+                    ;
+
+    : usart2-rx-handler
+                    %00100000 USART2_SR bit@ if
+                      USART2_DR @ rxb rx-head rbuf-ptr!
+                      rx-head rbuf-ptr++
+                    then
+                    ;
+
+    i: usart2-handler
+                    usart2-tx-handler
+                    usart2-rx-handler
+                    ;i
+
+    : emit          !txb-empty? if begin wfi txb-empty? until then
+                    txb tx-head rbuf-ptr!
+                    tx-head rbuf-ptr++
+                    %10000000 USART2_CR1 bis!
+                    ;
+
+    : key?          !rxb-empty? ;
+    : key           rxb-empty? if begin wfi !rxb-empty? until then
+                    rxb rx-tail rbuf-ptr@
+                    rx-tail rbuf-ptr++ ;
+
+[../../common/output.ft](../../common/output.ft.md)
+
+[../../common/input.ft](../../common/input.ft.md)
+
+[../dictionary/full.ft](../dictionary/full.ft.md)
+
+    ::stc:: include ../common/threading-stc.ft
+    ::dtc:: include ../common/threading-dtc.ft
+[../../common/exception.ft](../../common/exception.ft.md)
+
+[../../common/control-flow.ft](../../common/control-flow.ft.md)
+
+[../common/compiler.ft](../common/compiler.ft.md)
+
+[../../common/interpret.ft](../../common/interpret.ft.md)
+
+[../../common/utils.ft](../../common/utils.ft.md)
+
+[../common/tether.ft](../common/tether.ft.md)
+
+
+    $400 constant #page
+
+    : +pll          %1000000000000000000000000 RCC_CR bis! ;
+    : -pll          %1000000000000000000000000 RCC_CR bic! ;
+    : pllmul!       #18 lshift RCC_CFGR tuck @ $FFC3FFFF and or swap ! ;
+    : sysclk-src!   RCC_CFGR tuck @ $FFFFFFF0 and or swap ! ;
+    : flash-latency!
+                    FLASH_ACR tuck @ $FFFFFFF0 and or swap ! ;
+
+    : 32mhz         1 flash-latency!
+                    6 pllmul!
+                    +pll
+                    2 sysclk-src! ;
+
+    : setup-hw      32mhz %00000000000000000100 RCC_APB2ENR !
+                    %00100000000000000000 RCC_APB1ENR !
+                    GPIOA_CRL dup @ $FFFF00FF and $4B00 or swap !
+                    #278 USART2_BRR !
+                    %00000010000010101101 USART2_CR1 !
+                    0 dup dup dup tx-head ! tx-tail ! rx-head ! rx-tail !
+                    %1000000 NVIC_SETENA_BASE cell+ bis!
+                    ;
+
+    : reset         $05FA0004 $E000ED0C ! ;
+
+    : flash-busy?   1 FLASH_SR bit@ ;
+    : await-flash-idle
+                    begin flash-busy? 0= until ;
+    : unlock-flash  %10000000 FLASH_CR bit@
+                    if $CDEF89AB $045670123 FLASH_KEYR tuck ! ! then ;
+    : lock-flash    %10000000 FLASH_CR bis! ;
+    : flash-mode!   unlock-flash FLASH_CR dup @ $1F invert and rot or swap ! ;
+    : enable-flash-write
+                    unlock-flash %00001 flash-mode! ;
+    : erase-page    unlock-flash %00010 flash-mode!
+                    FLASH_AR ! %01000000 FLASH_CR bis!
+                    await-flash-idle lock-flash ;
+    : erase-range   unlock-flash %00010 flash-mode!
+                    swap begin 2dup > while
+                      dup FLASH_AR ! %01000000 FLASH_CR bis! #page +
+                    repeat 2drop lock-flash ;
+    : flash.        FLASH_ACR 8 dumpw ;
+
+    $40 constant #init
+    $140 constant #vectors
+    $20000 constant end-of-flash
+
+    $380 constant backup-start
+    $380 constant backup-cold
+    $384 constant backup-latest
+    $388 constant backup-dp
+    $38C constant backup-vp
+
+[../janus/init.ft](../janus/init.ft.md)
+
+
+    : dict-space    backup-dp @ #page + #page 1- invert and ;
+    : erase-dictspace
+                    unlock-flash dict-space end-of-flash erase-range lock-flash ;
+
+    : save-vars     >r dint
+                    pad aligned
+                    0 over #page move
+                    0 erase-page
+                    enable-flash-write
+                    dup 0 #vectors hmove
+                    backup-start + backup-start #init hmove
+                    r> init-cold i!
+                    latest @ init-latest i! dp @ init-dp i! vp @ init-vp i!
+                    lock-flash eint ;
+
+    : restore-vars  dint
+                    pad aligned
+                    0 over #page move
+                    0 erase-page
+                    enable-flash-write
+                    dup 0 #vectors hmove
+                    dup backup-start + backup-start #init hmove
+                        backup-start + init-start #init hmove
+                    lock-flash eint ;
+
+    : save          bl word dup c@ 0= if
+                      ." missing start word, not saving" drop exit then
+                    find 0= if ." not found, not saving" drop exit then
+                    save-vars ;
+    : restore       restore-vars erase-dictspace ;
+
+    : cold          s0 sp! r0 rp! setup-vars setup-hw
+                    ." CoreForth-0 " .threading ."  ready" cr
+                    0 source-id !
+    ::stc::         init-dp @ backup-dp @ = if dict-space org then
+                    hex
+    ::tethered::    4 emit tether-loop
+                    abort ;
+
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+[../janus/tether.ft](../janus/tether.ft.md)
+
+
+    ::tethered:: tether
+
+    ::dtc:: t' #docol $0C + t@ t' ,enter 8 + t!
+    ::dtc:: t' #dodoes $0C + t@ t' ,dodoes 8 + t!
+
+    t' usart2-handler 1+ trom $000000D8 + t!
+
+[../janus/save-image.ft](../janus/save-image.ft.md)
+
+
+    ::dtc:: s" nucleo-f103rb-dtc.hex" save-hex
+    ::stc:: s" nucleo-f103rb-stc.hex" save-hex

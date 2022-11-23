@@ -1,0 +1,94 @@
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+[../janus/compiler.ft](../janus/compiler.ft.md)
+
+
+-- Target -------------------------------------------------------------------
+
+    ::target::
+
+    $00000000 to trom
+    $20000000 to tram
+            4 to tcell
+
+    trom tdp !
+    tram tvp !
+
+    tram $00001000 + t, 0 t,
+    trom $00000400 + torg
+
+      $10 buffer:  #docol
+      $10 buffer:  #dodoes
+      $7C buffer:  psp
+          variable s0
+      $7C buffer:  rsp
+          variable r0
+
+[../cpus/cortex-m3/armv7-m-primitives.ft](../cpus/cortex-m3/armv7-m-primitives.ft.md)
+
+    ::stc:: include ../cpus/cortex-m3/threading-stc.ft
+    ::dtc:: include ../cpus/cortex-m3/threading-dtc.ft
+[../common/core.ft](../common/core.ft.md)
+
+[../../common/core.ft](../../common/core.ft.md)
+
+[../dictionary/common.ft](../dictionary/common.ft.md)
+
+
+    $E0000000 constant emulator-uart-tx
+    $E0000004 constant emulator-uart-rx
+    $E0000008 constant emulator-uart-sr
+
+    code wait-key   $2182 $B402 $BEAB end-code
+
+    : key?          emulator-uart-sr @ ;
+    : emit          emulator-uart-tx ! ;
+    : key           wait-key emulator-uart-rx @ ;
+
+[../../common/output.ft](../../common/output.ft.md)
+
+[../../common/input.ft](../../common/input.ft.md)
+
+[../dictionary/full.ft](../dictionary/full.ft.md)
+
+    ::stc:: include ../common/threading-stc.ft
+    ::dtc:: include ../common/threading-dtc.ft
+[../../common/exception.ft](../../common/exception.ft.md)
+
+[../../common/control-flow.ft](../../common/control-flow.ft.md)
+
+[../common/compiler.ft](../common/compiler.ft.md)
+
+[../../common/interpret.ft](../../common/interpret.ft.md)
+
+[../../common/utils.ft](../../common/utils.ft.md)
+
+
+[../janus/init.ft](../janus/init.ft.md)
+
+
+    code rom-dump   $6831 $6030 $0008 $0001 $6830 $3604 $B402 $0001 $6830
+                    $3604 $B402 $2180 $B402 $BEAB end-code
+    : save-vars     latest @ init-latest i! dp @ init-dp i! vp @ init-vp i! ;
+    : save          bl word dup c@ 0= if
+                      ." missing start word, not saving" drop exit then
+                    find 0= if ." not found, not saving" drop exit then
+                    save-vars
+                    0 here rom-dump ;
+
+    : cold          setup-vars ." CoreForth-0 " .threading ."  ready" cr hex abort ;
+
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+    ::dtc:: t' #docol $0C + t@ t' ,enter 8 + t!
+    ::dtc:: t' #dodoes $0C + t@ t' ,dodoes 8 + t!
+
+[../janus/save-image.ft](../janus/save-image.ft.md)
+
+
+    ::dtc:: s" thumbulator-m3-dtc.bin" save-bin
+    ::stc:: s" thumbulator-m3-stc.bin" save-bin

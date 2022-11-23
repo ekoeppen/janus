@@ -1,0 +1,285 @@
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+    create #info $100 allot         #info $100 $ff fill
+    create #vectors $40 allot       #vectors $40 $ff fill
+
+    :noname     th, ; is t,call
+    :noname     $12B0 th, s" docon" tfwdref ; is t,docon
+    :noname     $12B0 th, s" docol" tfwdref ; is t,enter
+    :noname     ; is t,next
+    :noname     s" exit" tfwdref ; is t,exit
+    :noname     s" lit" tfwdref ; is t,lit
+    :noname     s" branch" tfwdref ; is t,branch
+    :noname     s" ?branch" tfwdref ; is t,?branch
+    :noname     ( c-addr n -- : compile word header into the target image )
+                talign
+                there tlast @ th, tlast !
+                there >target pack$
+                dup c@ tuck 1+ tallot talign
+                    swap $40 or swap c! ; is thead
+    :noname     tlast @ tcell + dup tc@ $bf and swap tc! ; is timmediate
+    :noname     tcell + dup tc@ $3F and + 1+ taligned ; is tlink>
+
+-- Target -------------------------------------------------------------------
+
+    ::target::
+
+    $0000C000 to trom
+    $00000200 to tram
+            2 to tcell
+
+    trom tdp !
+    tram tvp !
+
+[../cpus/msp430-primitives.ft](../cpus/msp430-primitives.ft.md)
+
+
+    $1000 constant info
+
+    $1000 constant 'turnkey
+    $1002 constant init-latest
+    $1004 constant init-dp
+    $1006 constant init-vp
+    $1008 constant user-low
+    $100A constant user-high
+    $100C constant save-init
+
+    $003E buffer: rs   variable r0
+    $003E buffer: ps   variable s0
+    $0010 buffer: tx-buffer
+    $0010 constant tx-buffer#
+
+    $0400 constant ram-top
+
+[../../common/core.ft](../../common/core.ft.md)
+
+[../../common/dictionary.ft](../../common/dictionary.ft.md)
+
+[../../common/output.ft](../../common/output.ft.md)
+
+[../../common/input.ft](../../common/input.ft.md)
+
+[../../common/exception.ft](../../common/exception.ft.md)
+
+[../../common/eventloop.ft](../../common/eventloop.ft.md)
+
+[../../common/timeout.ft](../../common/timeout.ft.md)
+
+[../compiler.ft](../compiler.ft.md)
+
+[../../common/control-flow.ft](../../common/control-flow.ft.md)
+
+[../../common/interpret.ft](../../common/interpret.ft.md)
+
+[../../common/utils.ft](../../common/utils.ft.md)
+
+
+[../cpus/msp430g2x53/sfr.fs](../cpus/msp430g2x53/sfr.fs.md)
+
+[../cpus/msp430g2x53/wdt.fs](../cpus/msp430g2x53/wdt.fs.md)
+
+[../cpus/msp430g2x53/clock.fs](../cpus/msp430g2x53/clock.fs.md)
+
+[../cpus/msp430g2x53/usci.fs](../cpus/msp430g2x53/usci.fs.md)
+
+[../cpus/msp430g2x53/flash.fs](../cpus/msp430g2x53/flash.fs.md)
+
+[../cpus/msp430g2x53/ports.fs](../cpus/msp430g2x53/ports.fs.md)
+
+[../cpus/msp430g2x53/adc.fs](../cpus/msp430g2x53/adc.fs.md)
+
+[../cpus/msp430g2x53/tlv.fs](../cpus/msp430g2x53/tlv.fs.md)
+
+
+[../save.ft](../save.ft.md)
+
+
+    : (set-speed)   ( caldco calbc -- )
+                    c@ BCSCTL1 c!   c@ DCOCTL c!   0 BCSCTL2 c! ;
+    : set-speed-16mhz   CALDCO_16MHZ CALBC1_16MHZ (set-speed) ;
+    : set-speed-12mhz   CALDCO_12MHZ CALBC1_12MHZ (set-speed) ;
+    : set-speed-8mhz    CALDCO_8MHZ CALBC1_8MHZ (set-speed) ;
+    : set-speed-1mhz    CALDCO_1MHZ CALBC1_1MHZ (set-speed) ;
+    : wdt>timeout   wdt/1s +wdt-ie eint ;
+
+    : +led          %00100000 P2OUT bis! ;
+    : -led          %00100000 P2OUT bic! ;
+    : +-led         %00100000 P2OUT xor! ;
+    : +rf-reset     %00000001 dup P2DIR bis! P2OUT bis! ;
+    : -rf-reset     %00000001 dup P2OUT bic! P2DIR bic! ;
+    : btn?          %10000000 P2IFG 2dup bit@ -rot bic! ;
+    : until-btn     begin dup execute standby btn? until drop ;
+    : blink         +led 270 delay -led ;
+
+    : setup-ports   %00000000 P1DIR c!
+                    %00000000 P1OUT c!
+                    %00000000 P1REN c!
+                    %11100110 dup P1SEL c! P1SEL2 c!
+                    %00000000 dup P2SEL c! P2SEL2 c!
+                    %00100010 P2DIR c! %001000000 P2OUT bic!
+                    %10000100 P2IE c! 0 P2IFG c! ;
+
+    : standby-ports %00000000 P1DIR c!
+                    %00000000 dup P1SEL c! P1SEL2 c!
+                    %11100000 P1OUT c!
+                    %11100000 P1REN c! ;
+
+    : setup-uart    %00000001 UCA0CTL1 c!
+                    %00000000 UCA0CTL0 c!
+                    %10000000 UCA0CTL1 bis!
+                    #65 UCA0BR0 c!   #3 UCA0BR1 c!
+                    %00000100 UCA0MCTL c!
+                    %00000001 UCA0CTL1 bic!
+                    $1000 begin 1- dup 0= until drop ;
+
+    : +spi          %00000010 P2OUT bic! ;
+    : -spi          %00000010 P2OUT bis! ;
+
+    : setup-spi     -spi
+                    %00000001 UCB0CTL1 c!
+                    %10101001 UCB0CTL0 c!         set SPI mode, master, sync
+                    %10000000 UCB0CTL1 bis!       clock = SMCLK
+                    8 UCB0BR0 c! 0 UCB0BR1 c!     prescaler 1x
+                    %00000001 UCB0CTl1 bic! ;     enable module
+
+    : spi.          UCB0CTL0 c@ b.8' space UCB0CTL1 c@ b.8' space
+                    UCB0BR0 @ hex. space UCB0STAT c@ b.8' space IE2 c@ b.8' space ;
+    : >spi>         ( c -- c )
+                    begin %00001000 $03 bit@ until UCB0TXBUF c!
+                    begin %00000100 3 bit@ until UCB0RXBUF c@ ;
+    : >spi          >spi> drop ;
+    : spi>          $FF >spi> ;
+
+    : await-adc-ifg  begin %100 ADC10CTL0 bit@ until ;
+    : disable-adc   0 %10 ADC10CTL0 tuck bic! ! ;
+    : adc.          ADC10AE0 @ b. ADC10CTL0 @ b. ADC10CTL1 @ b. ADC10MEM @ u. ;
+
+    : ntc-adc@      %00000001 ADC10AE0 bis!
+                    disable-adc
+                    %0000000011000000 ADC10CTL1 !
+                    %0011101000110010 ADC10CTL0 !
+                    %0000000000000001 ADC10CTL0 bis!
+                    await-adc-ifg
+                    disable-adc
+                    %00000000 ADC10AE0 !
+                    ADC10MEM @ ;
+
+    : (vcc-adc@)    ( ref -- )
+                    disable-adc
+                    %1011000011000000 ADC10CTL1 !
+                    %0011100000110010 or ADC10CTL0 !
+                    %0000000000000001 ADC10CTL0 bis!
+                    await-adc-ifg
+                    disable-adc
+                    ADC10MEM @ ;
+
+    : vcc           0 (vcc-adc@) dup $380 <
+                    if #375 * else drop %0000000001000000 (vcc-adc@) #625 * then
+                    4 rshift ;
+
+    code ntc-values $12b0 dovar
+                    #105 #131 #161 #195 #233 #275 #320 #367
+                    #415 #464 #512 #559 #603 #674 end-code
+
+    : ntc           ntc-adc@ dup #105 < if -#250 exit then
+                             dup #673 > if #400 exit then
+                    ntc-values begin 2dup @ > while cell+ repeat
+                    dup ntc-values - 2/ 1- #50 * #250 - -rot
+                    dup @ swap cell- @ tuck - -rot - #50 * swap /
+                    + ;
+
+    : ntc.          base @ decimal ntc . base ! ;
+    : vcc.          base @ decimal vcc . base ! ;
+
+[../../drivers/rfm69.ft](../../drivers/rfm69.ft.md)
+
+
+    : setup-buffer  ;
+    : vcc>buffer    ;
+    : temp>buffer   ;
+    : send-buffer   ; tx-buffer tx-buffer# rf-tx -rf-pwr ;
+
+    : setup-hw      disable-wdt
+                    set-speed-8mhz
+                    #16 set-flash-clk
+                    vlo>lfo
+                    wdt>timeout
+                    setup-ports
+                    setup-uart
+                    setup-spi ;
+
+    : power-up      setup-ports ;
+    : power-down    -spi standby-ports ;
+
+    : active-cycle  +led vcc>buffer temp>buffer -led send-buffer ;
+    : await-key     begin dup key? 0= and while standby 1- repeat ;
+
+    code sensor-loop $12b0 dovar
+                     0  power-up
+                     0  active-cycle
+                     0  power-down
+                     5  0
+                    -1 -1 end-code
+
+    : turnkey       setup-hw
+                    +rf-reset -rf-reset 1 ticks-delay
+                    ." 430Forth/RFM69 board XXXXXXXX ready" cr
+                    ['] rf-init catch ?dup if $45 emit ['] blink forever then
+                    begin
+                      setup-buffer
+                      blink sensor-loop ['] btn? run-loop
+                      power-up
+                      prompt 5 await-key
+                    until
+                    blink
+                    abort ;
+
+    : setup-pointers
+                    init-dp @ dp !
+                    init-vp @ vp !
+                    init-latest @ latest !  ;
+
+    : cold          s0 sp! r0 rp! #16 base ! 0 state ! 0 handler !
+                    setup-pointers
+                    'turnkey @ ?dup if catch ?dup if ex. then
+                    else abort
+                    then
+                    cold ;
+
+    code vector-18  $c0f1 $00f8 $0000 $1300 end-code
+    code vector-19  $c0f1 $00f8 $0000 $1300 end-code
+    : vector-26     <irq 1 tick +! %0000000100000111 and %00001000 or irq> ;
+    code vector-31  $4307 $4031 $0240 $4034 $027E $4020 cold end-code
+
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+    variable fd
+
+    t' turnkey dup              #info w!        #info $0C + w!
+    tlast @ dup                 #info $02 + w!  #info $0E + w!
+    tdp @ $200 + $FE00 and dup  #info $04 + w!  #info $10 + w!
+    tvp @ dup                   #info $06 + w!  #info $12 + w!
+
+    t' vector-18 #vectors #36 + w!
+    t' vector-19 #vectors #38 + w!
+    t' vector-26 #vectors #52 + w!
+    t' vector-31 #vectors #62 + w!
+
+    : save-bin ( mem mem-len name name-len -- )
+                    w/o create-file throw >r
+                    r@ write-file throw
+                    r> close-file throw ;
+
+    s" rfm69.hex" w/o create-file throw fd !
+    $1000 #info $100 fd @ type-hex
+    trom #target there trom - fd @ type-hex
+    $ffc0 #vectors $40 fd @ type-hex
+    fd @ close-file throw
+
+    #info $100 s" rfm69-info.bin" save-bin
+    #target there trom - s" rfm69-main.bin" save-bin
+    #vectors $40 s" rfm69-vectors.bin" save-bin

@@ -1,0 +1,101 @@
+vim:ft=forth:ts=2:sw=2:expandtab
+
+    variable latest
+
+    $0040 constant immediate-flag
+    $0080 constant visible-flag
+
+    : depth         s0 sp@ - /cell 1- ;
+    : rdepth        r0 rp@ - /cell 1- ;
+    : .s            sp@ depth 1- begin ?dup while
+                      swap dup @ . cell+ swap 1-
+                    repeat drop cr ;
+
+    : .r            rp@ rdepth 1- begin ?dup while
+                      swap dup @ . cell+ swap 1-
+                    repeat drop cr ;
+
+    : align         here aligned org ;
+    : link>name     2 cells + ;
+    : link>flags    cell+ ;
+    : link>         link>name dup c@ + 1+ aligned ;
+    : >body         4 cells + ;
+    : visible?      link>flags @ visible-flag and 0> ;
+    : immediate?    link>flags @ immediate-flag and 0> ;
+    : ,link         , ;
+    : ,call         , ;
+    : ,enter        $0000f92c , ;
+    : ,dodoes       $000cf92c , ;
+    : ,next         $0020ea0c , $0000fe03 , ;
+    : ,exit         ['] exit ,call ;
+
+    : ,dodata       $000c0f28 , $00300c0d , ,next ;
+    : ,docon        $000c0f2c , $00300c0d , ,next ;
+
+    : (s")          r> count 2dup + aligned >r ;
+
+    : latest-flags  ( -- addr f ) latest @ link>flags dup @ ;
+    : immediate     latest-flags immediate-flag or swap ! ;
+    : hide          latest-flags visible-flag invert and swap ! ;
+    : reveal        latest-flags visible-flag or swap ! ;
+
+    : ,call         , ;
+    : literal       postpone lit , ; immediate
+
+    variable state
+
+    : [             false state ! ; immediate
+    : ]             true state ! ;
+    : compiling?    state @ ;
+    : interpreting? state @ 0= ;
+
+    : si=           ( c-addr1 c-addr2 -- f )
+                    dup c@ 1+ begin >r 2dup ci@= r> tuck and while
+                      1- rot 1+ rot 1+ rot
+                    repeat -rot 2drop 0= ;
+
+    : find          >r latest begin
+                      @ dup if dup link>name r@ si= over visible? and
+                      else r@ swap true
+                      then
+                    until rdrop
+                    dup if
+                      dup link>
+                      swap immediate? not 1 or
+                    then ;
+    : '             bl word find dup 0= if drop count type space $3F emit
+                    else drop then ;
+    : words         latest begin @ ?dup while
+                      dup link>name count type space
+                    repeat ;
+
+    : postpone      bl word find 0< if literal postpone ,call
+                    else ,call then ; immediate
+    : [']           ' postpone literal ; immediate
+    : s"            postpone (s")
+                    [char] " word dup dup c@ 1+ here swap move
+                    c@ 1+ allot align ; immediate
+    : ."            postpone s" postpone type ; immediate
+
+    : <builds       align   here latest dup @ ,link 0 , !
+                    bl word
+                    dup dup c@ 1+ here swap move
+                    c@ 1+ allot align ;
+
+    : :             <builds ,enter hide ] ;
+    : ;             ,exit reveal [ ; immediate
+    : :noname       align latest @ here latest ! ]  , here ; immediate
+
+    : create        <builds ,dodata reveal ;
+    : constant      <builds ,docon align , reveal ;
+    : variable      <builds ,docon align vp dup @ dup , cell+ swap ! reveal ;
+    : buffer:       <builds ,docon align vp dup @ dup , rot + swap ! reveal ;
+
+: defer         <builds $46F7 h, 6 allot reveal ; immediate
+: defer!        swap 1+ swap cell+ ! ;
+: is            ' $468F4900 over ! defer! ; immediate
+
+    : (does>)       here latest @ link> #8 + org ,dodoes r> ,call org ;
+    : does>         postpone (does>) ; immediate
+    : recurse       latest @ link> ,call ; immediate
+    : [char]        char postpone literal ; immediate

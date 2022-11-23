@@ -1,0 +1,208 @@
+vim:ft=forth:ts=2:sw=2:expandtab
+
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+    create #info $100 allot         #info $100 $ff fill
+    create #vectors $40 allot       #vectors $40 $ff fill
+
+    :noname     th, ; is t,call
+    :noname     $12B0 th, s" docon" tfwdref ; is t,docon
+    :noname     $12B0 th, s" docol" tfwdref ; is t,enter
+    :noname     ; is t,next
+    :noname     s" exit" tfwdref ; is t,exit
+    :noname     s" lit" tfwdref ; is t,lit
+    :noname     s" branch" tfwdref ; is t,branch
+    :noname     s" ?branch" tfwdref ; is t,?branch
+    :noname     ( c-addr n -- : compile word header into the target image )
+                talign
+                there tlast @ th, tlast !
+                there >target pack$
+                dup c@ tuck 1+ tallot talign
+                    swap $40 or swap c! ; is thead
+    :noname     tlast @ tcell + dup tc@ $bf and swap tc! ; is timmediate
+    :noname     tcell + dup tc@ $3F and + 1+ taligned ; is tlink>
+
+-- Target -------------------------------------------------------------------
+
+    ::target::
+
+    $0000C000 to trom
+    $00000200 to tram
+            2 to tcell
+
+    trom tdp !
+    tram tvp !
+
+[../cpus/msp430-primitives.ft](../cpus/msp430-primitives.ft.md)
+
+
+      $3E buffer:  psp
+          variable s0
+      $3E buffer:  rsp
+          variable r0
+
+    $1000 constant info
+
+    $1000 constant 'turnkey
+    $1002 constant init-latest
+    $1004 constant init-dp
+    $1006 constant init-vp
+    $1008 constant user-low
+    $100A constant user-high
+    $100C constant save-init
+
+    $0400 constant ram-top
+
+[../../common/core.ft](../../common/core.ft.md)
+
+[../../common/dictionary.ft](../../common/dictionary.ft.md)
+
+[../../common/output.ft](../../common/output.ft.md)
+
+[../../common/input.ft](../../common/input.ft.md)
+
+[../../common/exception.ft](../../common/exception.ft.md)
+
+[../../common/eventloop.ft](../../common/eventloop.ft.md)
+
+[../../common/timeout.ft](../../common/timeout.ft.md)
+
+[../compiler.ft](../compiler.ft.md)
+
+[../../common/control-flow.ft](../../common/control-flow.ft.md)
+
+[../../common/interpret.ft](../../common/interpret.ft.md)
+
+[../../common/utils.ft](../../common/utils.ft.md)
+
+
+[../cpus/msp430g2x53/irq.fs](../cpus/msp430g2x53/irq.fs.md)
+
+[../cpus/msp430g2x53/wdt.fs](../cpus/msp430g2x53/wdt.fs.md)
+
+[../cpus/msp430g2x53/clock.fs](../cpus/msp430g2x53/clock.fs.md)
+
+[../cpus/msp430g2x53/usci.fs](../cpus/msp430g2x53/usci.fs.md)
+
+[../cpus/msp430g2x53/flash.fs](../cpus/msp430g2x53/flash.fs.md)
+
+[../cpus/msp430g2x53/ports.fs](../cpus/msp430g2x53/ports.fs.md)
+
+[../cpus/msp430g2x53/tlv.fs](../cpus/msp430g2x53/tlv.fs.md)
+
+
+[../save.ft](../save.ft.md)
+
+
+    : (set-speed)   ( caldco calbc -- )
+                    c@ BCSCTL1 c!   c@ DCOCTL c!   0 BCSCTL2 c! ;
+    : set-speed-16mhz   CALDCO_16MHZ CALBC1_16MHZ (set-speed) ;
+    : set-speed-12mhz   CALDCO_12MHZ CALBC1_12MHZ (set-speed) ;
+    : set-speed-8mhz   CALDCO_8MHZ CALBC1_8MHZ (set-speed) ;
+    : set-speed-1mhz   CALDCO_1MHZ CALBC1_1MHZ (set-speed) ;
+    : wdt>timeout   wdt/1s +wdt-ie eint ;
+
+    : setup-ports   %00001000 P1OUT c!
+                    %00001000 P1REN c!
+                    %00001000 dup P1IE c! P1IFG c!
+                    %10100101 P1DIR c!
+                    %11100110 dup P1SEL c! P1SEL2 c!
+                    %00000011 P2DIR c! ;
+
+    : setup-uart    %00000001 UCA0CTL1 c!
+                    %00000000 UCA0CTL0 c!
+                    %10000000 UCA0CTL1 bis!
+                    #65 UCA0BR0 c!   #3 UCA0BR1 c!
+                    %00000100 UCA0MCTL c!
+                    %00000001 UCA0CTL1 bic!
+                    $1000 begin 1- dup 0= until drop ;
+
+    : +spi          %00000010 P2OUT bic! ;
+    : -spi          %00000010 P2OUT bis! ;
+
+    : setup-spi     -spi
+                    %00000001 UCB0CTL1 c!
+                    %10101001 UCB0CTL0 c!         set SPI mode, master, sync
+                    %10000000 UCB0CTL1 bis!       clock = SMCLK
+                    8 UCB0BR0 c! 0 UCB0BR1 c!     prescaler 1x
+                    %00000001 UCB0CTl1 bic! ;     enable module
+
+    : spi.          UCB0CTL0 8 dump ;
+    : >spi>         ( c -- c )
+                    begin %00001000 $03 bit@ until UCB0TXBUF c!
+                    begin %00000100 $03 bit@ until UCB0RXBUF c@ ;
+    : >spi          >spi> drop ;
+    : spi>          $FF >spi> ;
+
+    : +led          %00000001 P1OUT bis! ;
+    : -led          %00000001 P1OUT bic! ;
+    : +-led         %00000001 P1OUT xor! ;
+
+    : +rf-ce        %00000001 P2OUT bis! ;
+    : -rf-ce        %00000001 P2OUT bic! ;
+
+    : setup-hw      disable-wdt
+                    set-speed-8mhz
+                    wdt>timeout
+                    #16 set-flash-clk
+                    setup-ports
+                    setup-uart
+                    setup-spi
+                    ;
+
+[../../drivers/nrf24.ft](../../drivers/nrf24.ft.md)
+
+[../../drivers/nrf24-utils.ft](../../drivers/nrf24-utils.ft.md)
+
+
+    : turnkey       setup-hw 0 source-id !
+                    ." CoreForth-0 ready" cr
+                    abort ;
+
+    : setup-pointers
+                    init-dp @ dp !
+                    init-vp @ vp !
+                    init-latest @ latest !  ;
+
+    : cold          s0 sp! r0 rp! #16 base ! 0 state ! 0 handler !
+                    setup-pointers
+                    'turnkey @ ?dup if catch ?dup if ex. then
+                    else abort
+                    then
+                    cold ;
+
+    code vector-18  $c0f1 $00f8 $0000 $1300 end-code
+    code vector-19  $c0f1 $00f8 $0000 $1300 end-code
+    : vector-26     <irq 1 tick +! %0000000100000111 and %00001000 or irq> ;
+    code vector-31  $4307 $4031 $0240 $4034 $027E $4020 cold end-code
+
+    ::host::
+
+    variable fd
+
+    t' turnkey dup              #info w!        #info $0C + w!
+    tlast @ dup                 #info $02 + w!  #info $0E + w!
+    tdp @ $200 + $FE00 and dup  #info $04 + w!  #info $10 + w!
+    tvp @ dup                   #info $06 + w!  #info $12 + w!
+
+    t' vector-18 #vectors #36 + w!
+    t' vector-19 #vectors #38 + w!
+    t' vector-26 #vectors #52 + w!
+    t' vector-31 #vectors #62 + w!
+
+    : save-bin ( mem mem-len name name-len -- )
+                    w/o create-file throw >r
+                    r@ write-file throw
+                    r> close-file throw ;
+
+    s" msp-exp430g2.hex" w/o create-file throw fd !
+    $1000 #info $100 fd @ type-hex
+    trom #target there trom - fd @ type-hex
+    $ffc0 #vectors $40 fd @ type-hex
+    fd @ close-file throw
+
+    #info $100 s" msp-exp430g2-info.bin" save-bin
+    #target there trom - s" msp-exp430g2-main.bin" save-bin
+    #vectors $40 s" msp-exp430g2-vectors.bin" save-bin
