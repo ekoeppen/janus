@@ -14,11 +14,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Docker login
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2.1.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.ghcr_write }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Docker build and push
         uses: docker/build-push-action@v2
         with:
