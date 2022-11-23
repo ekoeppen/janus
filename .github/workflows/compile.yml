@@ -48,7 +48,7 @@ jobs:
       image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_read }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get artifacts
         uses: actions/download-artifact@v2
@@ -65,7 +65,7 @@ jobs:
       image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_read }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get artifacts
         uses: actions/download-artifact@v2
@@ -82,7 +82,7 @@ jobs:
       image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_read }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get artifacts
         uses: actions/download-artifact@v2
@@ -99,7 +99,7 @@ jobs:
       image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_read }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get artifacts
         uses: actions/download-artifact@v2
@@ -116,7 +116,7 @@ jobs:
       image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_read }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get artifacts
         uses: actions/download-artifact@v2
@@ -133,7 +133,7 @@ jobs:
       image: ghcr.io/ekoeppen/janus/janus:latest
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_read }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get artifacts
         uses: actions/download-artifact@v2
