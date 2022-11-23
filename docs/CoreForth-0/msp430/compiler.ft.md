@@ -1,0 +1,97 @@
+vim:ft=forth:ts=2:sw=2:expandtab
+
+-----------------------------------------------------------------------------
+-- Dictionary
+
+    variable latest
+
+    : ,call         , ;
+    : literal       postpone lit , ; immediate
+
+    : len=          ( c-addr c-addr -- f ) c@ $3F and swap c@ $3F and = ;
+    : dict-compare  ( c-addr1 c-addr2 -- f )
+                    2dup len= 0= if 2drop 0 exit then
+                    swap 1+ swap count begin ?dup while
+                      -rot 2dup ci@= 0= if 2drop drop 0 exit then
+                      1+ swap 1+ rot 1-
+                    repeat 2drop -1 ;
+
+    : align         here aligned org ;
+    : imove         move ;
+    : link>name     cell+ ;
+    : link>flags    cell+ ;
+    : link>         link>name dup c@ $3F and + 1+ aligned ;
+    : >body         2 cells + ;
+    : visible?      link>flags c@ $80 and 0= ;
+    : ,link         , ;
+    : find          >r latest begin
+                      @ dup if dup link>name r@ dict-compare over visible? and
+                      else r@ swap true
+                      then
+                    until rdrop
+                    dup if
+                      dup link>
+                      swap link>flags c@ $40 and 0<> 1 or
+                    then ;
+    : '             bl word find dup 0= if drop count type space $3F emit
+                    else drop then ;
+    : words         latest begin @ ?dup while
+                      dup link>name count $3F and type space
+                    repeat ;
+
+-----------------------------------------------------------------------------
+-- Compiler
+
+    variable state
+
+    : [             false state ! ; immediate
+    : ]             true state ! ;
+    : compiling?    state @ ;
+    : interpreting? state @ 0= ;
+
+    : (,action)     -2 cells allot $12b0 , ; here at CFA
+    : ,enter        (,action) ['] docol , ;
+    : ,docon        (,action) ['] docon , ;
+    : ,dovar        (,action) ['] dovar , ;
+    : ,exit         ['] exit , ;
+
+    code dodoes     $8324 $4784 $0000 $4136 $4137 $1205 $4605 $4530 end-code
+
+    : immediate     $40 latest @ link>flags bic! ;
+    : reveal        $80 latest @ link>flags bic! ;
+    : hide          $80 latest @ link>flags bis! ;
+    : postpone      bl word find 0< if literal postpone ,call
+                    else ,call then ; immediate
+    : [']           ' postpone literal ; immediate
+
+    : (;code)       r> $12b0 latest @ link> tuck ! cell+ ! ;
+    : ;code         postpone (;code) reveal [ ; immediate
+
+    : <builds       leaves two cells for CFA before PFA to allow patching code
+                    field
+                    align   here latest dup @ ,link   !
+                    bl word
+                    dup dup c@ 1+
+                        over $C0 swap bis!
+                        here swap imove
+                    c@ $3F and 1+ allot align 2 cells allot ;
+    : :             <builds ,enter hide ] ;
+    : ;             ,exit reveal [ ; immediate
+    : :noname       align latest @ here dup latest ! ,enter ] ; immediate
+
+    : does>         postpone (;code) $12b0 , ['] dodoes , ; immediate
+    : alloc         vp @ dup rot + vp ! ;
+    : create        <builds ,dovar reveal ;
+    : constant      <builds ,docon , reveal ;
+    : variable      <builds ,docon cell alloc , reveal ;
+    : buffer:       <builds ,docon alloc , reveal ;
+    : defer         <builds $FFFF , 6 allot ; immediate
+    : is            ' $FFFF over ! cell+ ! ; immediate
+
+    : recurse       latest @ link> ,call ; immediate
+    : [char]        char postpone literal ; immediate
+    : (s")          r> count 2dup + aligned >r ;
+    : s"            postpone (s")
+                    [char] " word dup dup c@ 1+ here swap imove
+                    c@ 1+ allot align ; immediate
+    : ."            postpone s" postpone type ; immediate

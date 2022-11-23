@@ -1,0 +1,101 @@
+vim:ft=forth:ts=2:sw=2:expandtab
+
+-- Host ---------------------------------------------------------------------
+
+    ::host::
+
+    :noname     $F846 th, $0D04 th, $4800 th, $46F7 th, ; is ,docon
+    :noname     $B500 th, ; is ,enter
+    :noname     $BD00 th, ; is ,exit
+    :noname     4 - there -
+                dup -$1000000 $1000000 within 0= if call-range-exceeded throw then
+                1 #23 lshift 1- and
+                dup #12 rshift %0000011111111111 and $F000 or th,
+                     #1 rshift %0000011111111111 and $F800 or th, ; is ,call
+    :noname     ( c-addr n -- : compile word header into the target image )
+                talign
+                there tlast @ t, tlast !
+                $ff7f th,
+                there >target pack$ c@ 1+ tallot talign ; is thead
+    :noname     tlast @ tcell + dup tc@ $bf and swap tc! ; is timmediate
+    :noname     tcell + tcell 2/ + dup tc@ + taligned ; is tlink>
+
+
+-- Target -------------------------------------------------------------------
+
+    ::target::
+
+    $00000000 to trom
+    $20000000 to tram
+            4 to tcell
+
+    trom tdp !
+    tram tvp !
+
+    tram $00001000 + t, 0 t,
+    trom $00000400 + torg
+
+      $7C buffer:  psp
+          variable s0
+      $7C buffer:  rsp
+          variable r0
+
+[../cpus/cortex-m3/armv7-m-primitives.ft](../cpus/cortex-m3/armv7-m-primitives.ft.md)
+
+[../../common/core.ft](../../common/core.ft.md)
+
+
+[../cpus/efm32pg/cmu.ft](../cpus/efm32pg/cmu.ft.md)
+
+[../cpus/efm32pg/gpio.ft](../cpus/efm32pg/gpio.ft.md)
+
+[../cpus/efm32pg/usart.ft](../cpus/efm32pg/usart.ft.md)
+
+
+    : emit          USART0_TXDATA c!
+                    begin USART0_STATUS @ %100000 and until ;
+    : key?          USART0_STATUS @ %10000000 and ;
+    : key           begin key? until USART0_RXDATA c@ ;
+
+[../../common/io.ft](../../common/io.ft.md)
+
+[../../common/utils.ft](../../common/utils.ft.md)
+
+[../common/compiler.ft](../common/compiler.ft.md)
+
+
+    : setup-vars    $3F4 @ latest ! $3F8 @ dp ! $3FC @ vp ! #16 base ! ;
+    : save-vars     $3F0 ! latest @ $3F4 ! dp @ $3F8 ! vp $3FC ! ;
+
+    code reset-handler
+                    $4668 $3820 $0006 $4801 $6800 $4687 $03F0 $0000 end-code
+
+    : init-cmu      %000100000000000000000000 CMU_CTRL bis!
+                    %0000000000001000 CMU_HFBUSCLKEN0 bis!
+                    %0000000000010000 CMU_HFPERCLKEN0 bis! ;
+    : init-gpio     %010000000100000100010100 GPIO_PA_MODEL ! ;
+    : init-usart    10304 USART0_CLKDIV !
+                    %01100000 USART0_CTRL bis!
+                    %000000001111 USART0_ROUTEPEN !
+                    %00000000000000000000000000000000 USART0_ROUTELOC0 !
+                    %0101 USART0_CMD !
+                    %00100000 GPIO_PA_DOUT ! ;
+
+    : init-hw       init-cmu init-gpio init-usart ;
+
+    : cold          setup-vars init-hw ." CoreForth-0 ready" cr hex abort ;
+
+    ::host::
+
+    t' reset-handler 1+ trom $00000004 + t!
+    t' cold             trom $000003F0 + t!
+    tlast @             trom $000003F4 + t!
+    tdp @               trom $000003F8 + t!
+    tvp @               trom $000003FC + t!
+
+    variable hex-fd
+
+    s" janus.hex" w/o create-file throw hex-fd !
+    trom #target there trom - hex-fd @ type-hex
+    t' reset-handler 1+ hex-fd @ hex-end
+    hex-fd @ close-file throw

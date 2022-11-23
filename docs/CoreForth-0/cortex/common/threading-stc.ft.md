@@ -1,0 +1,15 @@
+    : ,call         here cell+ -
+                    1 #23 lshift 1- and
+                    dup #12 rshift %0000011111111111 and $F000 or h,
+                         #1 rshift %0000011111111111 and $F800 or h, ;
+    : ,enter        $B500 h, ;
+    : ,exit         $BD00 h, ;
+    : ,next         $BD00 h, ;
+
+    : ,dodata       $3e04 h, $6030 h, $4678 h, $3008 h, $46F7 h, 6 allot ;
+    : ,docon        $3e04 h, $6030 h, $4800 h, $46F7 h, ;
+    : (does>)       here latest @ link> #8 + org ,enter r> 1- ,call org ;
+
+    : (s")          r> 1- count 2dup + aligned 1+ >r ;
+
+    : execute       1+ >r ;

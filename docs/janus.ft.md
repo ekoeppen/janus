@@ -1,0 +1,439 @@
+# Janus
+
+Janus is a Forth meta compiler. As a meta compiler, it is written in Forth to
+produce another Forth compiler. Janus has been tested with GForth as the host
+compiler and can so far compile CoreForth-0 and eForth.
+
+Good background reading about meta compilers is
+[Meta eForth DTC](http://www.ultratechnology.com/meta1.html)
+and
+[Embed Forth](https://github.com/howerj/embed/blob/master/embed.fth),
+Janus takes inspiration from both projects.
+
+## Wordlists
+
+Janus performs meta compilation by using Forth wordlists to generate a target
+image. The three wordlists are `host`, `meta` and `target`.
+
+### `host` wordlist
+
+The `host` wordlist is the outer wordlist, active when Janus starts, containing
+words which are used to interact with the host system, such as file I/O. It also
+contains all words which handle the target image, e.g. adding words to the target
+image, or compiling data into the target image.
+
+### `meta` wordlist
+
+The `meta` wordlist is active during processing of the target Forth. It
+contains immediate words which handle for example compilation of control flow.
+In a non-meta Forth, these words would be defined in terms of the target Forth,
+but in a meta compiled Forth setup, these words are based on the host Forth to
+build the target image.
+
+### `target` wordlist
+
+The `target` wordlist contains the dictionary of the target words as they are
+created while processing the target Forth. These words will when called compile
+a call to themselves into the target code space.
+
+## Implementation
+
+Set up the `target` and `meta` wordlists. The `host` wordlist is not explicitly
+created, the `Forth` wordlist is used as a simplification.
+
+    wordlist constant target-wordlist
+    wordlist constant meta-wordlist
+
+Create helper words to switch between the word lists. `::host::` will reset the
+current wordlist to `Forth` for definitions and compilation. `::meta::` will do
+additionally add the `meta` wordlist as the first wordlist to be searched and
+use for definitions.
+
+`::target::` works a bit differently: When it is selected, words will be by default
+defined in the `host` (`Forth`) wordlist. This is however just the default, during
+meta compilation, target words will be added to the target wordlist (see `mcreate`
+below). Words will be searched first in the `meta` wordlist to handle control
+structures, and then in the `target` wordlist to lookup and compile target words
+into the target image.
+
+    : ::host::    only forth definitions ;
+    : ::meta::    only forth meta-wordlist >order definitions ;
+    : ::target::  only forth definitions target-wordlist >order meta-wordlist >order ;
+
+## Set up the host definitions
+
+Switch to the host worklist:
+
+    ::host::
+
+Numbers in hex by default:
+
+    hex
+
+Load support for writing Intel Hex files, usually used by the target Forth
+to write out the final image.
+
+[intel-hex.ft](intel-hex.ft.md)
+
+
+Define the different threading types. Note that the support here only
+goes as far as allowing to set the type via the command line, but the
+actual implementation is outside of Janus within the target Forth.
+
+    0 constant STC
+    1 constant DTC
+    2 constant ITC
+
+Define variables holding the command line arguments:
+
+      create source-file $400 allot
+    variable tethered
+      create tether-port $400 allot
+      create tether-speed $10 allot
+    variable threading-type
+
+Set the defaults: `STC` as the threading type, and the first serial port for
+tethering, reset the source file name to be read.
+
+           STC threading-type !
+             0 tether-port c!
+    s" 115200" tether-speed place
+             0 source-file c!
+
+Load the words used for command line argument parsing:
+
+[args.ft](args.ft.md)
+
+
+Parse the command line arguments and update the variables above:
+
+    parse-args
+
+Define the ROM and RAM base addresses. In a pure RAM based system,
+these would have the same value. These will be set by the target
+Forth.
+
+            0 value trom
+            0 value tram
+
+Define the target Forth cell size, this is also set by the target Forth.
+
+            0 value tcell
+
+Define a value for the exception thrown if at the end of the compilation,
+the stack is not balanced:
+
+            2 constant non-empty-stack
+
+The target image size is 64k by default:
+
+    $00010000 constant target#
+
+### Meta compilation helpers
+
+During meta compilation, the target image is compiled similar to a non-meta
+compiled Forth. Many of the definitions below are implemented in similar terms
+as in a regular Forth, but in order to avoid name conflicts, almost all are
+prefixed with `t`.
+
+The target dictionary pointer, i.e. the address into the target image to
+which values are written during meta compilation:
+
+    variable tdp
+
+The target variable pointer. In systems with a combined code and variable
+space, this variable is not used.
+
+    variable tvp
+
+Declare and set the `last` pointer for the target to the beginning of the
+target image.
+
+    variable tlast 0 tlast !
+
+Allocate the target image and fill it with 0xFF:
+
+    create #target target# allot
+           #target target# -1 fill
+
+Convert a target relative address to an index into the target binary:
+
+    : >target   #target + trom - ;
+
+### Target dictionary pointer
+
+Operations on the target dictionary pointer, similar to their non-meta
+counterparts.
+
+    : there     tdp @ ;
+    : torg      tdp ! ;
+    : taligned  tcell 1- + tcell negate and ;
+    : talign    there taligned tdp ! ;
+    : tallot    tdp +! ;
+
+### Writing data to the target image
+
+All operations use target relative addresses, which are converted to
+indices to the target image.
+
+    : t!        >target tcell 4 = if l! else w! then ;
+    : tc@       >target c@ ;
+    : t@        >target l@ ;
+    : tc!       >target c! ;
+    : th!       >target w! ;
+    : t,        there t! tcell tallot ;
+    : tc,       there tc! 1 tallot ;
+    : th,       there th! 2 tallot ;
+    : talloc    trom tram <> if tvp @ t, tvp +!
+                else there tcell + t, tallot
+                then ;
+
+### Finding words
+
+Looking up words in the target wordlist, to e.g. get the body address:
+
+    : (tfind)   target-wordlist search-wordlist ;
+    : tfind     (tfind) 0= throw >body @ ;
+    : t'        parse-name tfind ;
+
+Compile the body address as a literal:
+
+    : [t']      t' postpone literal ; immediate
+
+#### Compiling special actions
+
+A target Forth can control with the words below how different key parts
+of a Forth system are compiled into the target image (the `,` in the names
+below indicates a store into the directory). The words are deferred, so that
+they can be imlpemented by the target Forth. The actual implementation
+depends also on the threading model.
+
+Compile the action for pushing a constant:
+
+    defer t,docon
+
+Compile the code needed when entering (sometimes called `DOCOL`) and exiting
+(`EXIT`) a Forth word:
+
+    defer t,enter
+    defer t,exit
+
+Compile the actions for entering and exiting an interrupt handler (e.g. saving
+and restoring CPU state:
+
+    defer t,doirq
+    defer t,irqexit
+
+Compile the `NEXT` action into the code:
+
+    defer t,next
+
+Compile the invocation of another words:
+
+    defer t,call
+
+Compile the `LIT` action into the code (pushing the next word to the stack):
+
+    defer t,lit
+
+Compile unconditional and conditional branches:
+
+    defer t,branch
+    defer t,?branch
+
+The target Forth can implement different header formats, such as normal
+headers, or headerless words. The words below interact with the target
+image: `thead` creates a word header in the image, `tlink>` (equivalent to
+`LINK>`) calculates the code field address, and `timmediate` sets the
+immediate flag of the current word.
+
+    defer thead
+    defer tlink>
+    defer timmediate
+
+### Word creation
+
+Create a word in the target wordlist using standard `CREATE` semantics:
+
+    : tcreate   get-current target-wordlist set-current create set-current ;
+
+Parse a word, but leave it in the input stream. Keeping the word in the
+input stream allows the dual word creation (target and target image):
+
+    : lookahead >in @ >r parse-name r> >in ! ;
+
+Look up a word in the target wordlist, and compile a call to it into
+the target image:
+
+    : tfwdref   tfind t,call ;
+
+Create a word with no name in the target dictionary:
+
+    : h:        tcreate there , does> @ t,call ;
+
+Creates a word in the target dictionary:
+
+    : t:        lookahead thead h: ;
+
+End the the word definition:
+
+    : t;        ;
+
+### Utility functions
+
+Some utility functions follow. First a function to create the name part of
+a word header:
+
+    : pack$     dup >r 2dup c! 1+ 2dup + 0 swap ! swap cmove r> ;
+
+Then, hex dump of the target image:
+
+    : tdump     #target there dump ;
+
+Finally, a word to list the target wordlist definitions:
+
+    : tlist     target-wordlist >order
+                context @ 8 + begin @ dup while
+                  dup name>int >body @ 8 u.r space dup id. cr
+                repeat drop
+                previous ;
+
+Check at the end of the meta compilation if the stack is balanced,
+then list all defined words:
+
+    : final     depth if
+                  ." Stack not empty: " cr
+                  .s cr
+                  non-empty-stack throw
+                then
+                cr tlist
+                ;
+
+## Meta compiler definitions
+
+Switch to the meta wordlist for the following definitions. The definitions
+make up the core of the meta compiler.
+
+    ::meta::
+
+Include the words needed to parse regular and code word definitions:
+
+[parse.ft](parse.ft.md)
+
+[code.ft](code.ft.md)
+
+
+To compile `s"`, a couple of helper strings are useful:
+
+    create squote$ char s c, char " c,
+    create (squote)$ char ( c, char s c, char " c, char ) c,
+
+Another helper string, used for looking up `type` in the target
+wordlist:
+
+    : type$     s" type" ;
+
+The following words are immediate words, which will create control
+structures in the target image. They resemble their counterparts
+of a regular Forth system, except that they interact with the target
+image via the words defined in the host wordlist above.
+
+    : immediate immediate timmediate ;
+
+    : postpone  parse-name target-wordlist search-wordlist dup 0= throw
+                swap >body @ swap
+                0< if t,lit t, s" ,call" tfwdref
+                   else t,call
+                   then ;
+    : if        t,?branch there tcell tallot ;
+    : else      t,branch there tcell tallot there rot t! ;
+    : then      there swap t! ;
+    : begin     there ;
+    : while     t,?branch there tcell tallot swap ;
+    : again     t,branch t, ;
+    : until     t,?branch t, ;
+    : repeat    t,branch t, there swap t! ;
+    : ahead     t,branch there tcell tallot ;
+    : does>     s" (does>)" tfwdref ; immediate
+    : for       s" >r" tfwdref there ; immediate
+    : next      s" (next)" tfwdref t, ; immediate
+    : aft       drop t,branch there tcell tallot there swap ;
+    : recurse   tlast @ tlink> t,call ;
+    : do        s" (do)" tfwdref there ;
+    : loop      s" (loop)" tfwdref t,?branch t, ;
+    : (         [char] ) word drop ;
+    :         refill drop ;
+    : [']       t,lit t' t, ;
+    : [char]    t,lit char t, ;
+    : s"        (squote)$ 4 tfwdref
+                $22 word dup dup c@ 1+ there #target + trom - swap cmove
+                c@ 1+ tallot talign ;
+    : ."        s" type$ tfwdref ;
+
+    : constant  t: t,docon t, ;
+    : variable  t: t,docon tcell talloc ;
+    : buffer:   t: t,docon talloc ;
+
+### Create words in the target image
+
+Below are the words which are actually creating new definitions
+in the target wordlist and image. The principle is to first generate
+the target wordlist entry and target image header, compile the needed
+entry action, and then keep parsing and interpreting words from the
+input stream.
+
+During parsing, each word will, when executed, compile a call to itself
+into the target image, or via the words defined above, compile
+control structures.
+
+#### IRQ Handlers
+
+IRQ handlers might need different entry and exit actions, thus
+two words are defined below which provide hooks for this.
+IRQ handlers are creared by first creating a definition in the target
+wordlist and image, compiling the code needed for entering an IRQ
+and then parsing and executing the rest of the input stream.
+
+When `;i` is encountered in the input stream, it will add the code
+for exiting an IRQ handler, finish the definition in the target
+wordlist, and set the flag for finishing parsing further words.
+
+    : i:        t: t,doirq read-word ;
+    : ;i        t,irqexit t; end-word ;
+
+#### Regular Forth words
+
+First, define `meta:` as an alias to the current colon definition start
+word, used to keep defining words in the meta wordlist.
+
+    : meta:     : ;
+
+Colon is now redefined to define words in the target wordlist and image.
+After creating the definitions in the wordlist and image, compile the
+enter action (e.g. `DOCOL` for a DTC Forth), and keep parsing and executing
+words in the input stream as in the IRQ handler case.
+
+    : :         t: t,enter read-word ;
+
+Use the previous colon definition to define the word used for finishing
+a definition in target wordlist and image, and signal the end of the parsing
+loop.
+
+    meta:       ; t,exit t; end-word ;
+
+## Compile the target Forth
+
+Load the source file (e.g. CoreForth-0 for a specific board) given on the
+command line.
+
+    source-file count included
+
+## End compilation
+
+End with the `host` wordlist active, output some final statistics and stop.
+
+    ::host::
+
+    final
+
+    bye

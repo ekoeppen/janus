@@ -1,4 +1,4 @@
-\ Intel HEX format.
+\ ## Intel HEX format output
 
 get-current
 wordlist >order definitions
@@ -37,8 +37,8 @@ variable fd
 
 set-current
 
-\ Type an Intel HEX file with target address at a1, and data in a2 u.
-\ Use file f for saving
+\ Save an Intel HEX file with target address at a1, and data in a2 u in file f
+
 : type-hex ( a1 a2 u f -- )
             fd !
             rot dup $0000FFFF and addr!
@@ -46,6 +46,8 @@ set-current
             0line 0sum +: 2 +2h 0 +4h 4 +2h #16 rshift +4h +sum +eol .line
             .lines
             r> base ! ;
+
+\ End the hex output.
 
 : hex-end  ( start-addr f -- )
             fd !

@@ -1,0 +1,80 @@
+vim:ft=forth:ts=2:sw=2:expandtab
+
+    variable base
+
+    : -rot          rot rot ;
+    : 2drop         drop drop ;
+
+    : 2c@           c@ swap c@ swap ;
+    : +!            dup @ rot + swap ! ;
+    : -!            dup @ rot - swap ! ;
+
+
+    : /             /mod nip ;
+    : umod          u/mod drop ;
+    : mod           /mod drop ;
+    : >             swap < ;
+    : u>            swap u< ;
+    : <>            = invert ;
+    : <=            > invert ;
+    : >=            < invert ;
+    : within        over - >r - r> u< ;
+
+    : s>d           dup 0< ;
+
+    : umin          2dup u> if swap then drop ;
+    : umax          2dup u< if swap then drop ;
+    : min           2dup > if swap then drop ;
+    : max           2dup < if swap then drop ;
+
+    : 2@            dup cell+ @ swap @ ;
+    : 2!            swap over ! cell+ ! ;
+    : i!            2dup h! swap #16 rshift swap 2+ h! ;
+
+    : 2over         >r >r 2dup r> r> 2swap ;
+
+    : uppercase     dup $61 $7B within $20 and xor ;
+    : /string       rot over + -rot - ;
+    : 1/string      1- swap 1+ swap ;
+    : count         dup 1+ swap c@ ;
+    : ci@=          c@ uppercase swap c@ uppercase = ;
+    : cappend       1 over +! dup c@ + c! ;
+    : digit?        dup $39 > $80 2*  and +
+                    dup $A0 2* > $83 2* 1+ and -
+                    $30 - dup base @ u< ;
+    : separator?    $27 = ;
+
+    : fill          swap >r swap begin r@ 0>
+                      while 2dup c! 1+ r> 1- >r
+                    repeat
+                    rdrop 2drop ;
+    : cmove         >r begin r@ 0> while
+                      over c@ over c! 1+ swap 1+ swap
+                      r> 1- >r
+                    repeat rdrop 2drop ;
+    : cmove>        >r swap r@ + swap r@ + begin r@ 0> while
+                      swap 1- swap 1- over c@ over c!
+                      r> 1- >r
+                    repeat rdrop 2drop ;
+    : hmove         >r begin r@ 0> while
+                      over h@ over h! 2+ swap 2+ swap
+                      r> 2- >r
+                    repeat rdrop 2drop ;
+    : wmove          >r begin r@ 0> while
+                      over @ over ! cell+ swap cell+ swap
+                      r> cell- >r
+                    repeat rdrop 2drop ;
+
+    : move          >r 2dup $3 and swap $3 and r@ $3 and or or
+                    0= if r> wmove exit then
+                    2dup $1 and swap $1 and r@ $1 and or or
+                    0= if r> hmove exit then
+                    2dup < if r> cmove> else r> cmove then ;
+
+    : binary        #2 base ! ;
+    : octal         #8 base ! ;
+    : decimal       #10 base ! ;
+    : hex           #16 base ! ;
+
+    : @cell+        ( a -- a' n ) dup cell+ swap @ ;
+    : depth         s0 sp@ - /cell 1- ;
