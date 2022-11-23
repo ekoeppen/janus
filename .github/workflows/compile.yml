@@ -10,7 +10,7 @@ jobs:
       image: ghcr.io/${{ github.repository }}/janus:latest
       credentials:
         username: ${{ github.actor }}
-        password: ${{ secrets.ghcr_read }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
