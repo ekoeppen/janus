@@ -41,7 +41,7 @@ Process the command line arguments.
                     repeat drop ;
 
 Define conditional compliation helpers. Depending on the condition being checked,
-ignore the rest of the line by executing the comment word ``.
+ignore the rest of the line by executing the comment word `\`.
 
     : ::stc::       threading-type @ STC <> if postpone then ;
     : ::dtc::       threading-type @ DTC <> if postpone then ;
