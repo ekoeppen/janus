@@ -116,5 +116,4 @@
     ::dtc:: code doirq      $b4e0 $4677 $3f01 $cf20 $4728 end-code
     ::dtc:: code irqexit    $bce0 $2100 $3907 $4708 end-code
 
-    ::itc:: code doirq      $b4e0 $4677 $3f01 $cf20 $4728 end-code
-    ::itc:: code irqexit    $bce0 $2100 $3907 $4708 end-code
+    ::itc:: code irqexit    $bdf0 end-code
