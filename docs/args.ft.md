@@ -4,7 +4,8 @@ Set the threading mode, currently only subroutine or direct threading is handled
 
     : set-threading dup arg s" --dtc" compare 0= if DTC
                     else dup arg s" --stc" compare 0= if STC
-                    else exit then then
+                    else dup arg s" --itc" compare 0= if ITC
+                    else exit then then then
                     threading-type !  ;
 
 Set the tethering parameters.

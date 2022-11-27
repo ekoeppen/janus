@@ -32,9 +32,10 @@ Parse words from the input stream until `code-done` is not zero.
 
 Start a new code word by first creating a dictionary header in the
 target dictionary by fetching the next word as the code word name,
+compiling the action needed for code words (used for ITC threading)
 and then continue to read upcoming words as code words.
 
-    : code          t: read-code ;
+    : code          t: t,docode read-code ;
 
 If we encounter `end-code` in the input stream, encode the `NEXT` action
 to the target dictionary, and set `code-done` to true to stop parsing.

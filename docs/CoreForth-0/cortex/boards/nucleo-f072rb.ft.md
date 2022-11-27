@@ -7,12 +7,6 @@
 [../janus/compiler.ft](../janus/compiler.ft.md)
 
 
-    :noname     ( c-addr n -- : compile word header into the target image )
-                2drop talign
-                there tlast @ t, tlast ! ; is thead
-    :noname     ; is timmediate
-
-
 -- Target -------------------------------------------------------------------
 
     ::target::
@@ -26,6 +20,12 @@
 
     tram $00004000 + t, 0 t,
     trom $00000400 + torg
+
+[../cpus/cortex-m0/armv6-m-primitives.ft](../cpus/cortex-m0/armv6-m-primitives.ft.md)
+
+    ::stc:: include ../cpus/cortex-m0/threading-stc.ft
+    ::dtc:: include ../cpus/cortex-m0/threading-dtc.ft
+    ::itc:: include ../cpus/cortex-m0/threading-itc.ft
 
     ::dtc::   $10 buffer: #docol
     ::dtc::   $10 buffer: #dodoes
@@ -54,10 +54,6 @@
        $08020000 constant end-of-flash
             $400 constant #page
 
-[../cpus/cortex-m0/armv6-m-primitives.ft](../cpus/cortex-m0/armv6-m-primitives.ft.md)
-
-    ::stc:: include ../cpus/cortex-m0/threading-stc.ft
-    ::dtc:: include ../cpus/cortex-m0/threading-dtc.ft
 [../common/core.ft](../common/core.ft.md)
 
 [../../common/core.ft](../../common/core.ft.md)
@@ -126,6 +122,7 @@
 
     ::stc:: include ../common/threading-stc.ft
     ::dtc:: include ../common/threading-dtc.ft
+    ::itc:: include ../common/threading-itc.ft
 [../../common/exception.ft](../../common/exception.ft.md)
 
 [../../common/control-flow.ft](../../common/control-flow.ft.md)
@@ -197,4 +194,5 @@
     t' usart2-handler 1+ trom $000000b0 + t!
 
     ::dtc:: s" nucleo-f072rb-dtc.hex" save-hex
+    ::itc:: s" nucleo-f072rb-itc.hex" save-hex
     ::stc:: s" nucleo-f072rb-stc.hex" save-hex

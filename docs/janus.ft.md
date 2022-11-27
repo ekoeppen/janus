@@ -218,6 +218,10 @@ Compile the code needed when entering (sometimes called `DOCOL`) and exiting
     defer t,enter
     defer t,exit
 
+Compile the action for starting a code word, this is only used for ITC threading:
+
+    defer t,docode
+
 Compile the actions for entering and exiting an interrupt handler (e.g. saving
 and restoring CPU state:
 
@@ -275,7 +279,7 @@ Creates a word in the target dictionary:
 
     : t:        lookahead thead h: ;
 
-End the the word definition:
+End a word definition:
 
     : t;        ;
 

@@ -19,6 +19,12 @@
     tram $00001000 + t, 0 t,
     trom $00000400 + torg
 
+[../cpus/cortex-m0/armv6-m-primitives.ft](../cpus/cortex-m0/armv6-m-primitives.ft.md)
+
+    ::stc:: include ../cpus/cortex-m0/threading-stc.ft
+    ::dtc:: include ../cpus/cortex-m0/threading-dtc.ft
+    ::itc:: include ../cpus/cortex-m0/threading-itc.ft
+
       $10 buffer:  #docol
       $10 buffer:  #dodoes
       $7C buffer:  psp
@@ -26,10 +32,6 @@
       $7C buffer:  rsp
           variable r0
 
-[../cpus/cortex-m0/armv6-m-primitives.ft](../cpus/cortex-m0/armv6-m-primitives.ft.md)
-
-    ::stc:: include ../cpus/cortex-m0/threading-stc.ft
-    ::dtc:: include ../cpus/cortex-m0/threading-dtc.ft
 [../common/core.ft](../common/core.ft.md)
 
 [../../common/core.ft](../../common/core.ft.md)
@@ -55,6 +57,7 @@
 
     ::stc:: include ../common/threading-stc.ft
     ::dtc:: include ../common/threading-dtc.ft
+    ::itc:: include ../common/threading-itc.ft
 [../../common/exception.ft](../../common/exception.ft.md)
 
 [../../common/control-flow.ft](../../common/control-flow.ft.md)
@@ -92,3 +95,4 @@
 
     ::dtc:: s" thumbulator-dtc.bin" save-bin
     ::stc:: s" thumbulator-stc.bin" save-bin
+    ::itc:: s" thumbulator-itc.bin" save-bin
