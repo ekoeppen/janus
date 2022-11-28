@@ -76,6 +76,11 @@ to write out the final image.
 [intel-hex.ft](intel-hex.ft.md)
 
 
+Some basic string and path utility words:
+
+[utils.ft](utils.ft.md)
+
+
 Define the different threading types. Note that the support here only
 goes as far as allowing to set the type via the command line, but the
 actual implementation is outside of Janus within the target Forth.
@@ -108,6 +113,13 @@ Load the words used for command line argument parsing:
 Parse the command line arguments and update the variables above:
 
     parse-args
+
+If the source path is a relative path, prepend the current working
+directory to the source file to create an absolute path and allow Janus
+to include the file:
+
+    #512 string path
+    source-file count path abs-path>string
 
 Define the ROM and RAM base addresses. In a pure RAM based system,
 these would have the same value. These will be set by the target
@@ -430,7 +442,7 @@ loop.
 Load the source file (e.g. CoreForth-0 for a specific board) given on the
 command line.
 
-    source-file count included
+    path string-count included
 
 ## End compilation
 
