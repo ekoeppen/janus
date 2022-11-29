@@ -254,6 +254,10 @@ defer t,lit
 defer t,branch
 defer t,?branch
 
+\ Compile the prelude to a DOES> invocation:
+
+defer t,dodoes
+
 \ The target Forth can implement different header formats, such as normal
 \ headers, or headerless words. The words below interact with the target
 \ image: `thead` creates a word header in the image, `tlink>` (equivalent to
@@ -365,9 +369,9 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : until     t,?branch t, ;
 : repeat    t,branch t, there swap t! ;
 : ahead     t,branch there tcell tallot ;
-: does>     s" (does>)" tfwdref ; immediate
-: for       s" >r" tfwdref there ; immediate
-: next      s" (next)" tfwdref t, ; immediate
+: does>     t,dodoes ;
+: for       s" >r" tfwdref there ;
+: next      s" (next)" tfwdref t, ;
 : aft       drop t,branch there tcell tallot there swap ;
 : recurse   tlast @ tlink> t,call ;
 : do        s" (do)" tfwdref there ;
