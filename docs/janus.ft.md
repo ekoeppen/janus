@@ -205,7 +205,8 @@ indices to the target image.
 Looking up words in the target wordlist, to e.g. get the body address:
 
     : (tfind)   target-wordlist search-wordlist ;
-    : tfind     (tfind) 0= throw >body @ ;
+    : tfind     2dup (tfind) 0= if cr type ."  not found" cr 1 throw then
+                nip nip >body @ ;
     : t'        parse-name tfind ;
 
 Compile the body address as a literal:
@@ -256,6 +257,10 @@ Compile unconditional and conditional branches:
 
     defer t,branch
     defer t,?branch
+
+Compile the prelude to a DOES> invocation:
+
+    defer t,dodoes
 
 The target Forth can implement different header formats, such as normal
 headers, or headerless words. The words below interact with the target
@@ -370,9 +375,9 @@ image via the words defined in the host wordlist above.
     : until     t,?branch t, ;
     : repeat    t,branch t, there swap t! ;
     : ahead     t,branch there tcell tallot ;
-    : does>     s" (does>)" tfwdref ; immediate
-    : for       s" >r" tfwdref there ; immediate
-    : next      s" (next)" tfwdref t, ; immediate
+    : does>     t,dodoes ;
+    : for       s" >r" tfwdref there ;
+    : next      s" (next)" tfwdref t, ;
     : aft       drop t,branch there tcell tallot there swap ;
     : recurse   tlast @ tlink> t,call ;
     : do        s" (do)" tfwdref there ;
@@ -441,6 +446,13 @@ loop.
 
 Load the source file (e.g. CoreForth-0 for a specific board) given on the
 command line.
+
+Load words for tethering support:
+
+[tether.ft](tether.ft.md)
+
+
+    ::meta::
 
     path string-count included
 

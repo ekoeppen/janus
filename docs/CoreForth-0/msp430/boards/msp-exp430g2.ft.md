@@ -157,7 +157,7 @@ vim:ft=forth:ts=2:sw=2:expandtab
 [../../drivers/nrf24-utils.ft](../../drivers/nrf24-utils.ft.md)
 
 
-    : turnkey       setup-hw 0 source-id !
+    : turnkey       setup-hw 0 (source-id) !
                     ." CoreForth-0 ready" cr
                     abort ;
 
