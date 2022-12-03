@@ -47,4 +47,5 @@ ignore the rest of the line by executing the comment word `\`.
     : ::stc::       threading-type @ STC <> if postpone then ;
     : ::dtc::       threading-type @ DTC <> if postpone then ;
     : ::itc::       threading-type @ ITC <> if postpone then ;
-    : ::tethered::  tethered @ 0= if postpone then ;
+    : ::tethered::   tethered @ 0= if postpone then ;
+    : ::untethered:: tethered @ if postpone then ;

@@ -235,7 +235,7 @@
 
     : cold          s0 sp! r0 rp! setup-vars 64mhz setup-hw
                     ." CoreForth-0 " .threading ."  ready" cr
-                    0 source-id !
+                    0 (source-id) !
     ::stc::         init-dp @ backup-dp @ = if dict-space org then
                     hex abort ;
 

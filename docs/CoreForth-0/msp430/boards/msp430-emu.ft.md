@@ -98,7 +98,7 @@ vim:ft=forth:ts=2:sw=2:expandtab
                     then
                     cold ;
 
-    : turnkey       0 source-id !
+    : turnkey       0 (source-id) !
                     ." CoreForth-0 ready" cr
                     abort ;
 

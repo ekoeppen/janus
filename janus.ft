@@ -202,7 +202,8 @@ create #target target# allot
 \ Looking up words in the target wordlist, to e.g. get the body address:
 
 : (tfind)   target-wordlist search-wordlist ;
-: tfind     (tfind) 0= throw >body @ ;
+: tfind     2dup (tfind) 0= if cr type ."  not found" cr 1 throw then
+            nip nip >body @ ;
 : t'        parse-name tfind ;
 
 \ Compile the body address as a literal:
@@ -440,6 +441,12 @@ meta:       ; t,exit t; end-word ;
 \
 \ Load the source file (e.g. CoreForth-0 for a specific board) given on the
 \ command line.
+
+\ Load words for tethering support:
+
+include tether.ft
+
+::meta::
 
 path string-count included
 
