@@ -12,7 +12,7 @@ target code space at the current data pointer.
                       find ?dup if
                         drop execute
                       else
-                        number? if
+                        ?number if
                           th,
                         else count type [char] ? emit cr then
                       then
@@ -40,4 +40,4 @@ and then continue to read upcoming words as code words.
 If we encounter `end-code` in the input stream, encode the `NEXT` action
 to the target dictionary, and set `code-done` to true to stop parsing.
 
-    : end-code      t,next true code-done ! ; immediate
+    : end-code      t,next true code-done ! ;
