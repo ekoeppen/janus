@@ -95,6 +95,10 @@ variable tethered
   create tether-speed $10 allot
 variable threading-type
 
+       STC threading-type !
+         0 tether-port c!
+         0 source-file c!
+
 \ Load the words used for command line argument parsing:
 
 include args.ft
