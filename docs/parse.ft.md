@@ -4,7 +4,7 @@
                       find ?dup if
                         drop execute
                       else
-                        number? if
+                        ?number if
                           t,lit t,
                         else count type [char] ? emit cr -1 throw then
                       then

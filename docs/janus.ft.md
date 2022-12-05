@@ -51,7 +51,7 @@ use for definitions.
 
 `::target::` works a bit differently: When it is selected, words will be by default
 defined in the `host` (`Forth`) wordlist. This is however just the default, during
-meta compilation, target words will be added to the target wordlist (see `mcreate`
+meta compilation, target words will be added to the target wordlist (see `tcreate`
 below). Words will be searched first in the `meta` wordlist to handle control
 structures, and then in the `target` wordlist to lookup and compile target words
 into the target image.
@@ -97,14 +97,6 @@ Define variables holding the command line arguments:
       create tether-speed $10 allot
     variable threading-type
 
-Set the defaults: `STC` as the threading type, and the first serial port for
-tethering, reset the source file name to be read.
-
-           STC threading-type !
-             0 tether-port c!
-    s" 115200" tether-speed place
-             0 source-file c!
-
 Load the words used for command line argument parsing:
 
 [args.ft](args.ft.md)
@@ -118,8 +110,8 @@ If the source path is a relative path, prepend the current working
 directory to the source file to create an absolute path and allow Janus
 to include the file:
 
-    #512 string path
-    source-file count path abs-path>string
+#512 string path
+source-file count path abs-path>string
 
 Define the ROM and RAM base addresses. In a pure RAM based system,
 these would have the same value. These will be set by the target
@@ -274,9 +266,13 @@ immediate flag of the current word.
 
 ### Word creation
 
-Create a word in the target wordlist using standard `CREATE` semantics:
+Create a word in the target wordlist using standard `CREATE` semantics,
+at creation time, the current pointer into the target image is stored,
+and at run time, that address will be compiled as a call into the
+target image.
 
-    : tcreate   get-current target-wordlist set-current create set-current ;
+    : (tcreate) create there , does> @ t,call ;
+    : tcreate   get-current target-wordlist set-current (tcreate) set-current ;
 
 Parse a word, but leave it in the input stream. Keeping the word in the
 input stream allows the dual word creation (target and target image):
@@ -288,13 +284,9 @@ the target image:
 
     : tfwdref   tfind t,call ;
 
-Create a word with no name in the target dictionary:
-
-    : h:        tcreate there , does> @ t,call ;
-
 Creates a word in the target dictionary:
 
-    : t:        lookahead thead h: ;
+    : t:        lookahead thead tcreate ;
 
 End a word definition:
 
@@ -317,6 +309,7 @@ Finally, a word to list the target wordlist definitions:
                 context @ 8 + begin @ dup while
                   dup name>int >body @ 8 u.r space dup id. cr
                 repeat drop
+                words
                 previous ;
 
 Check at the end of the meta compilation if the stack is balanced,
@@ -454,7 +447,8 @@ Load words for tethering support:
 
     ::meta::
 
-    path string-count included
+path string-count included
+    source-file count included
 
 ## End compilation
 

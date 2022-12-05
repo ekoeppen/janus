@@ -65,7 +65,7 @@
                         >tether-word
                         await-done
                         ;
-    : target-number     s>number? invert if
+    : target-number     ?number invert if
                           2drop [char] ? emit cr exit
                         then
                         drop [char] # >tether-byte
@@ -93,7 +93,7 @@
                         ::target::
                         begin
                           reset-delta
-                          query
+                          refill
                           begin bl word dup c@ while
                             count
                             handle-word

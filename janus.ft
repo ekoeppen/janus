@@ -51,7 +51,7 @@ wordlist constant meta-wordlist
 \
 \ `::target::` works a bit differently: When it is selected, words will be by default
 \ defined in the `host` (`Forth`) wordlist. This is however just the default, during
-\ meta compilation, target words will be added to the target wordlist (see `mcreate`
+\ meta compilation, target words will be added to the target wordlist (see `tcreate`
 \ below). Words will be searched first in the `meta` wordlist to handle control
 \ structures, and then in the `target` wordlist to lookup and compile target words
 \ into the target image.
@@ -94,14 +94,6 @@ variable tethered
   create tether-port $400 allot
   create tether-speed $10 allot
 variable threading-type
-
-\ Set the defaults: `STC` as the threading type, and the first serial port for
-\ tethering, reset the source file name to be read.
-
-       STC threading-type !
-         0 tether-port c!
-s" 115200" tether-speed place
-         0 source-file c!
 
 \ Load the words used for command line argument parsing:
 
@@ -271,9 +263,13 @@ defer timmediate
 
 \ ### Word creation
 \
-\ Create a word in the target wordlist using standard `CREATE` semantics:
+\ Create a word in the target wordlist using standard `CREATE` semantics,
+\ at creation time, the current pointer into the target image is stored,
+\ and at run time, that address will be compiled as a call into the
+\ target image.
 
-: tcreate   get-current target-wordlist set-current create set-current ;
+: (tcreate) create there , does> @ t,call ;
+: tcreate   get-current target-wordlist set-current (tcreate) set-current ;
 
 \ Parse a word, but leave it in the input stream. Keeping the word in the
 \ input stream allows the dual word creation (target and target image):
@@ -285,13 +281,9 @@ defer timmediate
 
 : tfwdref   tfind t,call ;
 
-\ Create a word with no name in the target dictionary:
-
-: h:        tcreate there , does> @ t,call ;
-
 \ Creates a word in the target dictionary:
 
-: t:        lookahead thead h: ;
+: t:        lookahead thead tcreate ;
 
 \ End a word definition:
 
