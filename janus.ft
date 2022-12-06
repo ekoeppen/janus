@@ -350,7 +350,9 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 \ of a regular Forth system, except that they interact with the target
 \ image via the words defined in the host wordlist above.
 
-: immediate immediate timmediate ;
+: immediate get-current target-wordlist set-current immediate set-current
+            timmediate
+            ;
 
 : postpone  parse-name target-wordlist search-wordlist dup 0= throw
             swap >body @ swap
