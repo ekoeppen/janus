@@ -285,9 +285,12 @@ defer timmediate
 
 : tfwdref   tfind t,call ;
 
-\ Creates a word in the target dictionary:
+\ Creates a word in the target dictionary, print its body address and name:
 
-: t:        lookahead thead tcreate ;
+: t:        lookahead 2dup
+            thead tcreate
+            there hex. space type cr
+            ;
 
 \ End a word definition:
 
@@ -306,11 +309,7 @@ defer timmediate
 
 \ Finally, a word to list the target wordlist definitions:
 
-: tlist     target-wordlist >order
-            context @ 8 + begin @ dup while
-              dup name>int >body @ 8 u.r space dup id. cr
-            repeat drop
-            previous ;
+: tlist     target-wordlist >order words previous ;
 
 \ Check at the end of the meta compilation if the stack is balanced,
 \ then list all defined words:
@@ -320,7 +319,6 @@ defer timmediate
               .s cr
               non-empty-stack throw
             then
-            cr tlist
             ;
 
 \ ## Meta compiler definitions
