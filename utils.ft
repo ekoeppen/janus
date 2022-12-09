@@ -81,3 +81,5 @@
                 ?sign >r >number if rdrop 2drop drop 0
                 else 2swap 2drop drop r> if negate then
                 true then r> base ! ;
+
+: buffer: create allot ;
