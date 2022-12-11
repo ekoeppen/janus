@@ -1,0 +1,13 @@
+    code branch   $683f $cf20 $682c $46a7 end-code
+    code ?branch  $0001 $6830 $3604 $2900 $D003 $1d3f $cf20 $682c $46a7
+                  $683f $cf20 $682c $46a7 end-code
+
+    t: docol      $b480 th, $1d2f th, $cf20 th, $682c th, $46a7 th, 
+    t: docon      $3e04 th, $6030 th, $6868 th, $cf20 th, $682c th, $46a7 th,
+    t: dodata     $3e04 th, $6030 th, $0028 th, $3004 th, $cf20 th, $682c th, $46a7 th,
+    t: dodoes     $b480 th, $3e04 th, $6030 th, $0028 th, $3004 th, $4677 th, $3703 th,
+                  $cf20 th, $682c th, $46a7 th,
+    t: next       $cf20 th, $682c th, $46a7 th, 
+
+    code exit     $bc80 $cf20 $682c $46a7 end-code
+    code lit      $3e04 $6030 $cf01 $cf20 $682c $46a7 end-code

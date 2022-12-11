@@ -10,6 +10,7 @@
     variable addr
     variable fd
 
+    : >digit    dup 9 > 7 and + #48 + ;
     : 0line     0 >line ! ;
     : >>line    >line +! ;
     : ^line     >line @ #line + ;
@@ -18,7 +19,8 @@
     : .line     #line >line @ fd @ write-file throw ;
 
     : 0sum      0 sum ! ;
-    : +2h       dup sum +!  0 <# # # #> $-to-line ;
+    : +2h       dup sum +!
+                dup $0F and >digit swap 4 rshift $0F and >digit swap c-to-line c-to-line ;
     : +4h       dup 8 rshift +2h +2h ;
     : +sum      sum @ negate +2h ;
 

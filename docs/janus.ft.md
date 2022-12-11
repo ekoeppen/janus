@@ -97,6 +97,10 @@ Define variables holding the command line arguments:
       create tether-speed $10 allot
     variable threading-type
 
+           STC threading-type !
+             0 tether-port c!
+             0 source-file c!
+
 Load the words used for command line argument parsing:
 
 [args.ft](args.ft.md)
@@ -284,9 +288,12 @@ the target image:
 
     : tfwdref   tfind t,call ;
 
-Creates a word in the target dictionary:
+Creates a word in the target dictionary, print its body address and name:
 
-    : t:        lookahead thead tcreate ;
+    : t:        lookahead 2dup
+                thead tcreate
+                there hex. space type cr
+                ;
 
 End a word definition:
 
@@ -305,12 +312,7 @@ Then, hex dump of the target image:
 
 Finally, a word to list the target wordlist definitions:
 
-    : tlist     target-wordlist >order
-                context @ 8 + begin @ dup while
-                  dup name>int >body @ 8 u.r space dup id. cr
-                repeat drop
-                words
-                previous ;
+    : tlist     target-wordlist >order words previous ;
 
 Check at the end of the meta compilation if the stack is balanced,
 then list all defined words:
@@ -320,7 +322,6 @@ then list all defined words:
                   .s cr
                   non-empty-stack throw
                 then
-                cr tlist
                 ;
 
 ## Meta compiler definitions
@@ -352,7 +353,9 @@ structures in the target image. They resemble their counterparts
 of a regular Forth system, except that they interact with the target
 image via the words defined in the host wordlist above.
 
-    : immediate immediate timmediate ;
+    : immediate get-current target-wordlist set-current immediate set-current
+                timmediate
+                ;
 
     : postpone  parse-name target-wordlist search-wordlist dup 0= throw
                 swap >body @ swap
@@ -442,8 +445,7 @@ command line.
 
 Load words for tethering support:
 
-[tether.ft](tether.ft.md)
-
+include tether.ft
 
     ::meta::
 

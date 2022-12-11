@@ -1,0 +1,85 @@
+## Utilities for strings and paths
+
+Create a string which keeps the data in the dictionary. The first two
+cells of the string contain the current length and the maximum length,
+followed by the actual string data. When called, a string returns
+the address of the first cell, i.e. the current length:
+
+    : string        create 0 , dup , allot
+                    does> ;
+
+Print out the lengt, maximum length and data address of a string:
+
+    : string.       dup @ . cell+ dup @ . cell+ . ;
+
+Similar to `count`, leave the data addess and current length of the
+string on the stack:
+
+    : string-count  ( s -- c-addr n ) dup @ swap cell+ cell+ swap ;
+
+Append a single character to the string:
+
+    : c>string      ( c s -- ) dup >r dup @ swap cell+ cell+ + c! 1 r> +! ;
+
+Get the address of the first unallocated character:
+
+    : string-last   ( s -- c-addr ) dup @ swap cell+ cell+ + ;
+
+Append the contents of a given memory range to the string:
+
+    : s>string      ( c-addr n s -- ) dup >r string-last swap dup >r cmove r> r> +! ;
+
+Copy the contents of a memory range to the string:
+
+    : string!       ( c-addr n s -- ) 0 over ! s>string ;
+
+Copy or append a memory region to a counted string:
+
+    : place         ( c-addr u s -- ) 2dup c! 1+ swap cmove ;
+    : +place        ( c-addr u s -- )
+                    dup >r count + swap dup >r cmove
+                    >r >r dup c@ rot + swap c!
+                    ;
+
+Copy the absolute path for a given absolute or relative path to
+a string:
+
+    : abs-path>string ( c-addr n s -- )
+                    rot dup c@ [char] / = if -rot string! exit then -rot
+                    dup cell+ dup @ swap cell+ swap get-dir
+                        nip over +!
+                    [char] / over c>string
+                    s>string
+                    ;
+
+    : uppercase     dup $61 $7B within $20 and xor ;
+
+    : 1/string      1- swap 1+ swap ;
+
+    : setbase       ( addr n -- addr' n' )
+                    over c@ dup 0<> and
+                    dup [char] $ = if drop $10 else
+                    dup [char] # = if drop $0A else
+                        [char] % = if $02 else exit
+                    then then then base ! 1/string ;
+
+    : >number       ( u addr u --  u' addr' u' )
+                    setbase
+                    begin dup while
+                      over c@ uppercase digit? 0= if drop exit then
+                      >r rot base @ * r> + -rot
+                      1/string
+                    repeat ;
+
+    : ?sign         ( addr n --  addr' n' f )
+                    over c@ $2C - dup abs 1 = and
+                    dup if 1+ >r 1/string r> then ;
+
+    : ?number       ( c-addr -- n -1 | c-addr 0 )
+                    base @ >r
+                    dup 0 0 rot count
+                    ?sign >r >number if rdrop 2drop drop 0
+                    else 2swap 2drop drop r> if negate then
+                    true then r> base ! ;
+
+    : buffer: create allot ;

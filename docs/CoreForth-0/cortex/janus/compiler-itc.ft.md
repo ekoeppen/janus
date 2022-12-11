@@ -1,0 +1,9 @@
+    :noname     there tcell + t, ; is t,docode
+    :noname     s" docon" tfind t, ; is t,docon
+    :noname     s" docol" tfind t, ; is t,enter
+    :noname     $cf20 th, $682c th, $46a7 th, ; is t,next
+    :noname     s" exit" tfind t, ; is t,exit
+    :noname     $b5f0 th, $467f th, $3706 th, t,next ; is t,doirq
+    :noname     s" irqexit" tfind t, ; is t,irqexit
+    :noname     t, ; is t,call
+    :noname     s" (does>)" tfind t, $4C00 th, $47A0 th, s" dodoes" tfind 1+ t, ; is t,dodoes
