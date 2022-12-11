@@ -18,20 +18,37 @@ jobs:
           submodules: recursive
       - name: Compile
         run: |
+          echo "Compiling p3216 bootstrap binary..."
           gforth janus.ft -f CoreForth-0/p3216/p3216.ft
-          gforth janus.ft -f CoreForth-0/msp430/boards/msp-exp430g2.ft
-          gforth janus.ft -f CoreForth-0/msp430/boards/msp430-emu.ft
-          gforth janus.ft --stc -f CoreForth-0/cortex/boards/thumbulator.ft
-          gforth janus.ft --dtc -f CoreForth-0/cortex/boards/thumbulator.ft
-          gforth janus.ft --itc -f CoreForth-0/cortex/boards/thumbulator.ft
-          gforth janus.ft --stc -f CoreForth-0/cortex/boards/thumbulator-m3.ft
-          gforth janus.ft --dtc -f CoreForth-0/cortex/boards/thumbulator-m3.ft
-          gforth janus.ft --stc -f CoreForth-0/cortex/boards/nucleo-f072rb.ft
-          gforth janus.ft --dtc -f CoreForth-0/cortex/boards/nucleo-f072rb.ft
-          gforth janus.ft --stc -f CoreForth-0/cortex/boards/nucleo-f103rb.ft
-          gforth janus.ft --dtc -f CoreForth-0/cortex/boards/nucleo-f103rb.ft
-          gforth janus.ft --stc -f CoreForth-0/cortex/boards/nucleo-f303re.ft
-          gforth janus.ft --dtc -f CoreForth-0/cortex/boards/nucleo-f303re.ft
+          echo "Compiling p3216 final binary..."
+          p3216 p3216.bin janus.ft -f CoreForth-0/p3216/p3216.ft
+          echo "Compiling MSP430G2 Launchpad binary..."
+          p3216 p3216.bin janus.ft -f CoreForth-0/msp430/boards/msp-exp430g2.ft
+          echo "Compiling MSP430 Emulator binary..."
+          p3216 p3216.bin janus.ft -f CoreForth-0/msp430/boards/msp430-emu.ft
+          echo "Compiling Thumbulator STC binary..."
+          p3216 p3216.bin janus.ft --stc -f CoreForth-0/cortex/boards/thumbulator.ft
+          echo "Compiling Thumbulator DTC binary..."
+          p3216 p3216.bin janus.ft --dtc -f CoreForth-0/cortex/boards/thumbulator.ft
+          echo "Compiling Thumbulator ITC binary..."
+          p3216 p3216.bin janus.ft --itc -f CoreForth-0/cortex/boards/thumbulator.ft
+          echo "Compiling Thumbulator M3 STC binary..."
+          p3216 p3216.bin janus.ft --stc -f CoreForth-0/cortex/boards/thumbulator-m3.ft
+          echo "Compiling Thumbulator M3 DTC binary..."
+          p3216 p3216.bin janus.ft --dtc -f CoreForth-0/cortex/boards/thumbulator-m3.ft
+          echo "Compiling Nucleo F072RB STC binary..."
+          p3216 p3216.bin janus.ft --stc -f CoreForth-0/cortex/boards/nucleo-f072rb.ft
+          echo "Compiling Nucleo F072RB DTC binary..."
+          p3216 p3216.bin janus.ft --dtc -f CoreForth-0/cortex/boards/nucleo-f072rb.ft
+          echo "Compiling Nucleo F103RB STC binary..."
+          p3216 p3216.bin janus.ft --stc -f CoreForth-0/cortex/boards/nucleo-f103rb.ft
+          echo "Compiling Nucleo F103RB DTC binary..."
+          p3216 p3216.bin janus.ft --dtc -f CoreForth-0/cortex/boards/nucleo-f103rb.ft
+          echo "Compiling Nucleo F303RE STC binary..."
+          p3216 p3216.bin janus.ft --stc -f CoreForth-0/cortex/boards/nucleo-f303re.ft
+          echo "Compiling Nucleo F303RE DTC binary..."
+          p3216 p3216.bin janus.ft --dtc -f CoreForth-0/cortex/boards/nucleo-f303re.ft
+          echo "Compilation done."
       - name: Save CoreForth-0
         uses: actions/upload-artifact@v2
         with:
