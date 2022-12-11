@@ -7,7 +7,7 @@ jobs:
     environment: build
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -56,14 +56,14 @@ jobs:
       - name: Test
         working-directory: CoreForth-0
         run: |
-          sh ./CoreForth-0/tests/test.sh | p3216 p3216.bin
+          p3216 p3216.bin CoreForth-0/tests/test.ft
 
   test-msp430:
     environment: build
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -97,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -131,7 +131,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -148,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     container:
-      image: ghcr.io/ekoeppen/janus/janus:latest
+      image: ghcr.io/${{ github.repository }}:1.4.0
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
