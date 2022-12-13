@@ -93,7 +93,7 @@
                         ::target::
                         begin
                           reset-delta
-                          refill
+                          accept
                           begin bl word dup c@ while
                             count
                             handle-word

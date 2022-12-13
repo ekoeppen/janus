@@ -1,38 +1,5 @@
 ## Utilities for strings and paths
 
-Create a string which keeps the data in the dictionary. The first two
-cells of the string contain the current length and the maximum length,
-followed by the actual string data. When called, a string returns
-the address of the first cell, i.e. the current length:
-
-    : string        create 0 , dup , allot
-                    does> ;
-
-Print out the lengt, maximum length and data address of a string:
-
-    : string.       dup @ . cell+ dup @ . cell+ . ;
-
-Similar to `count`, leave the data addess and current length of the
-string on the stack:
-
-    : string-count  ( s -- c-addr n ) dup @ swap cell+ cell+ swap ;
-
-Append a single character to the string:
-
-    : c>string      ( c s -- ) dup >r dup @ swap cell+ cell+ + c! 1 r> +! ;
-
-Get the address of the first unallocated character:
-
-    : string-last   ( s -- c-addr ) dup @ swap cell+ cell+ + ;
-
-Append the contents of a given memory range to the string:
-
-    : s>string      ( c-addr n s -- ) dup >r string-last swap dup >r cmove r> r> +! ;
-
-Copy the contents of a memory range to the string:
-
-    : string!       ( c-addr n s -- ) 0 over ! s>string ;
-
 Copy or append a memory region to a counted string:
 
     : place         ( c-addr u s -- ) 2dup c! 1+ swap cmove ;
@@ -41,15 +8,43 @@ Copy or append a memory region to a counted string:
                     >r >r dup c@ rot + swap c!
                     ;
 
+    : dup$          2dup ;
+    : drop$         2drop ;
+    : swap$         2swap ;
+    : over$         2over ;
+    : r@$           2r@ ;
+    : nip$          2nip ;
+    : c@$           + c@ ;
+    : count$        nip ;
+
+    : append$       ( c-addr n c-addr1 n1 -- c-addr n+n1 )
+                    swap$ dup$ 2>r +
+                    swap dup >r
+                    cmove
+                    2r> + r> swap ;
+
+    : cappend$      ( c-addr n c -- c-addr n+1 )
+                    >r dup$ + r> swap c! 1+ ;
+
+    : find<$        ( c-addr n c -- n -1 | 0 )
+                    over 0= if drop nip exit then
+                    >r begin
+                      dup 0> while
+                      1- dup$ c@$ r@ <> while
+                    repeat then
+                    2dup + c@ r> = if nip true else 2drop 0 then
+                    ;
+
+    : tail$         ( c-addr n t -- c-addr+t n-t )
+                    rot over + -rot - ;
+
 Copy the absolute path for a given absolute or relative path to
 a string:
 
-    : abs-path>string ( c-addr n s -- )
-                    rot dup c@ [char] / = if -rot string! exit then -rot
-                    dup cell+ dup @ swap cell+ swap get-dir
-                        nip over +!
-                    [char] / over c>string
-                    s>string
+    : copy-abs-path ( c-addr n c-addr' n' -- c-addr n )
+                    over c@ [char] / = if append$ exit then
+                    swap$ drop #1024 get-dir [char] / cappend$
+                    swap$ append$
                     ;
 
     : uppercase     dup $61 $7B within $20 and xor ;
