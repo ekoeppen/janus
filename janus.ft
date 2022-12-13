@@ -452,4 +452,4 @@ meta:       ; t,exit t; end-word ;
 
 final
 
-bye
+0 bye
