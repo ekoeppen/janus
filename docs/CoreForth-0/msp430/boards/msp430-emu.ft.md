@@ -23,10 +23,7 @@ vim:ft=forth:ts=2:sw=2:expandtab
                     swap $40 or swap c! ; is thead
     :noname     tlast @ tcell + dup tc@ $bf and swap tc! ; is timmediate
     :noname     tcell + dup tc@ $3F and + 1+ taligned ; is tlink>
-
--- Target -------------------------------------------------------------------
-
-    ::target::
+    :noname     ; is t,docode
 
     $00004000 to trom
     $00000200 to tram
@@ -34,6 +31,10 @@ vim:ft=forth:ts=2:sw=2:expandtab
 
     trom tdp !
     tram tvp !
+
+-- Target -------------------------------------------------------------------
+
+    ::target::
 
 [../cpus/msp430-primitives.ft](../cpus/msp430-primitives.ft.md)
 

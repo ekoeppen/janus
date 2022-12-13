@@ -96,6 +96,7 @@ Define variables holding the command line arguments:
       create tether-port $400 allot
       create tether-speed $10 allot
     variable threading-type
+      create #path $400 allot
 
            STC threading-type !
              0 tether-port c!
@@ -109,13 +110,6 @@ Load the words used for command line argument parsing:
 Parse the command line arguments and update the variables above:
 
     parse-args
-
-If the source path is a relative path, prepend the current working
-directory to the source file to create an absolute path and allow Janus
-to include the file:
-
-#512 string path
-source-file count path abs-path>string
 
 Define the ROM and RAM base addresses. In a pure RAM based system,
 these would have the same value. These will be set by the target
@@ -133,9 +127,9 @@ the stack is not balanced:
 
             2 constant non-empty-stack
 
-The target image size is 64k by default:
+The target image size is 256k by default:
 
-    $00010000 constant target#
+    $00040000 constant target#
 
 ### Meta compilation helpers
 
@@ -449,8 +443,11 @@ include tether.ft
 
     ::meta::
 
-path string-count included
-    source-file count included
+Load the Forth to be processed. If the source path is a relative path,
+prepend the current working directory to the source file to create an
+absolute path.
+
+    #path 0 source-file count copy-abs-path included
 
 ## End compilation
 

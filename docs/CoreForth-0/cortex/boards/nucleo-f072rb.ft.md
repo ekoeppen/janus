@@ -7,10 +7,6 @@
 [../janus/compiler.ft](../janus/compiler.ft.md)
 
 
--- Target -------------------------------------------------------------------
-
-    ::target::
-
     $08000000 to trom
     $20000000 to tram
             4 to tcell
@@ -20,6 +16,10 @@
 
     tram $00004000 + t, 0 t,
     trom $00000400 + torg
+
+-- Target -------------------------------------------------------------------
+
+    ::target::
 
 [../cpus/cortex-m0/armv6-m-primitives.ft](../cpus/cortex-m0/armv6-m-primitives.ft.md)
 
