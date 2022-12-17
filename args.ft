@@ -10,7 +10,7 @@
 
 \ Set the tethering parameters.
 
-: set-tethered  dup arg s" --tethered" str= tethered ! ;
+: set-tethered  dup arg s" --tethered" str= if true tethered ! then ;
 
 : set-tether-port
                 dup arg s" --port" str= if
