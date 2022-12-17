@@ -24,4 +24,4 @@ jobs:
         with:
           file: docker/ci/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}:1.4.1
+          tags: ghcr.io/${{ github.repository }}:1.6.0
