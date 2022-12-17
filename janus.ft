@@ -301,9 +301,11 @@ defer timmediate
 
 : tdump     #target there dump ;
 
-\ Finally, a word to list the target wordlist definitions:
+\ Finally, a word to list the target wordlist definitions, and a word
+\ to show the RAM, ROM and dictionary pointers:
 
-: tlist     target-wordlist >order words previous ;
+: twords    target-wordlist >order words previous ;
+: tstat     trom u. tram u. tdp @ u. tvp @ u. there u. cr ;
 
 \ Check at the end of the meta compilation if the stack is balanced,
 \ then list all defined words:
@@ -332,10 +334,12 @@ include code.ft
 create squote$ char s c, char " c,
 create (squote)$ char ( c, char s c, char " c, char ) c,
 
-\ Another helper string, used for looking up `type` in the target
-\ wordlist:
+\ Helper strings, used for looking up strings in the target
+\ wordlist when s" is already defined as a meta compiler word:
 
 : type$     s" type" ;
+: abort$    s" abort" ;
+: cr$       s" cr" ;
 
 \ The following words are immediate words, which will create control
 \ structures in the target image. They resemble their counterparts
@@ -367,6 +371,7 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : recurse   tlast @ tlink> t,call ;
 : do        s" (do)" tfwdref there ;
 : loop      s" (loop)" tfwdref t,?branch t, ;
+: +loop     s" (+loop)" tfwdref t,?branch t, ;
 : (         [char] ) word drop ;
 : \         refill drop ;
 : [']       t,lit t' t, ;
@@ -375,6 +380,7 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
             $22 word dup dup c@ 1+ there #target + trom - swap cmove
             c@ 1+ tallot talign ;
 : ."        s" type$ tfwdref ;
+: abort"    if ." cr$ tfwdref abort$ tfwdref then ;
 
 : constant  t: t,docon t, ;
 : variable  t: t,docon tcell talloc ;
@@ -427,17 +433,10 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 
 meta:       ; t,exit t; end-word ;
 
-\ ## Compile the target Forth
-\
-\ Load the source file (e.g. CoreForth-0 for a specific board) given on the
-\ command line.
-
-\ Load words for tethering support:
-
-\ include tether.ft
-
 ::meta::
 
+\ ## Compile the target Forth
+\
 \ Load the Forth to be processed. If the source path is a relative path,
 \ prepend the current working directory to the source file to create an
 \ absolute path.
