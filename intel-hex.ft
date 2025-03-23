@@ -20,7 +20,7 @@ variable fd
 
 : 0sum      0 sum ! ;
 : +2h       dup sum +!
-            dup $0F and >digit swap 4 rshift $0F and >digit swap c-to-line c-to-line ;
+            dup $0F and >digit swap 4 rshift $0F and >digit c-to-line c-to-line ;
 : +4h       dup 8 rshift +2h +2h ;
 : +sum      sum @ negate +2h ;
 
