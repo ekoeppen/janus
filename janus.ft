@@ -150,6 +150,8 @@ variable tvp
 
 variable tlast 0 tlast !
 
+variable tstate
+
 \ Allocate the target image and fill it with 0xFF:
 
 create #target target# allot
@@ -355,6 +357,8 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
             0< if t,lit t, s" ,call" tfwdref
                else t,call
                then ;
+: ,         tstate @ if s" ," tfwdref else t, then ;
+
 : if        t,?branch there tcell tallot ;
 : else      t,branch there tcell tallot there rot t! ;
 : then      there swap t! ;

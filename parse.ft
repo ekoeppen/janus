@@ -1,6 +1,6 @@
 variable word-done
 
-: parse-word    begin  bl word  dup c@ while
+: parse-word    1 tstate ! begin  bl word  dup c@ while
                   find ?dup if
                     drop execute
                   else
@@ -16,4 +16,4 @@ variable word-done
                   refill
                 0= until ;
 
-: end-word      true word-done ! ;
+: end-word      true word-done ! 0 tstate ! ;
