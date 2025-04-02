@@ -5,8 +5,8 @@ This is a simple Forth cross compiler inspired by
 [J1](https://github.com/jamesbowman/j1).
 
 [CoreForth-0](https://github.com/ekoeppen/CoreForth-0) is one of the initial
-Forths, with Cortex-M0/3 and MSP430 as the targets, and included as a Git
-submodule.
+Forths, with Cortex-M0/3, [p3216](https://github.com/ekoeppen/p3216) and MSP430
+as the targets.
 
 Janus uses [gforth](https://gforth.org) as the host compiler. The following
 command line switches are defined:
