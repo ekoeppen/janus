@@ -150,7 +150,15 @@ variable tvp
 
 variable tlast 0 tlast !
 
+\ State of the target compiler, this can be controlled while parsing target
+\ words. A state of one means numbers are compiled as literals into the target
+\ word, whereas zero leaves the number on the host stack to allow compiling
+\ then into the word using comma.
+
 variable tstate
+
+: t[        0 tstate ! ;
+: ]t        1 tstate ! ;
 
 \ Allocate the target image and fill it with 0xFF:
 

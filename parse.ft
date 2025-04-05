@@ -5,7 +5,9 @@ variable word-done
                     drop execute
                   else
                     ?number if
-                      t,lit t,
+                      tstate @ if
+                        t,lit t,
+                      then
                     else count type [char] ? emit cr -1 throw then
                   then
                 repeat drop ;
