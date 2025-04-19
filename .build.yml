@@ -1,23 +1,32 @@
 image: alpine/edge
+oauth: pages.sr.ht/PAGES:RW
 secrets:
   - ca99d209-296a-41b7-9eda-454250e4b901
 packages:
   - rust
   - cargo
+  - hugo
+  - hut
 environment:
   REPO: janus
+  SITE: ekoeppen.srht.site
 sources:
   - https://git.sr.ht/~ekoeppen/build-scripts
-  - https://git.sr.ht/~ekoeppen/janus
   - https://git.sr.ht/~ekoeppen/CoreForth-0
   - https://git.sr.ht/~ekoeppen/p3216
 tasks:
-  - mirror-to-github: ./build-scripts/github-mirror $REPO
+  - docs: |
+      cd $REPO/docs
+      ./mkmd.sh
+      hugo build
+      tar -cz -f $HOME/docs.tar.gz -C public .
+      hut pages publish -d $SITE -s janus $HOME/docs.tar.gz 
   - build-p3216: |
       cp janus/bin/p3216 p3216/image.bin
       cd p3216
       cargo build --profile release --features preload
   - build-coreforth-p3216: |
       p3216/target/release/p3216 janus/janus.ft -f CoreForth-0/p3216/p3216.ft
+  - mirror-to-github: ./build-scripts/github-mirror $REPO
 artifacts:
   - p3216.bin

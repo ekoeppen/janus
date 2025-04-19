@@ -1,8 +1,0 @@
-    : tether-ram
-    ::dtc::             s" #docol" (tfind) drop >body @ #12 + t@
-    ::dtc::             s" docol" (tfind) drop >body !
-                        #target target# -1 fill
-                        reset-delta
-                        tram to trom
-                        tvp @ torg
-                        ;

@@ -1,9 +1,0 @@
-    :noname     $3e04 th, $6030 th, $4800 th, $46F7 th, ; is t,docon
-    :noname     $B500 th, ; is t,enter
-    :noname     $B5F0 th, ; is t,doirq
-    :noname     $46f7 th, ; is t,next
-    :noname     $BD00 th, ; is t,exit
-    :noname     $BDF0 th, ; is t,irqexit
-    ' ,bl is t,call
-    :noname     s" (does>)" tfwdref ; is t,dodoes
-    :noname     ; is t,docode

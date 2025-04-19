@@ -1,2 +1,0 @@
-    $E000E100 constant NVIC_SETENA_BASE
-    $E000E300 constant NVIC_ACTIVE_BASE

@@ -393,6 +393,7 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
             c@ 1+ tallot talign ;
 : ."        s" type$ tfwdref ;
 : abort"    if ." cr$ tfwdref abort$ tfwdref then ;
+: exit      t,exit ;
 
 : constant  t: t,docon t, ;
 : variable  t: t,docon tcell talloc ;
