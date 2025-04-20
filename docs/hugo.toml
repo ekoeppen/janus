@@ -1,3 +1,4 @@
 baseURL = '/janus'
 languageCode = 'en-us'
 title = 'Janus'
+markup.goldmark.renderHooks.link.enableDefault = true
