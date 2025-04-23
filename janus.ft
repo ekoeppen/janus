@@ -232,6 +232,11 @@ defer t,exit
 
 defer t,docode
 
+\ Compile the action for `CREATE` which pushes the data field address of the
+\ last created word:
+
+defer t,dovar
+
 \ Compile the actions for entering and exiting an interrupt handler (e.g. saving
 \ and restoring CPU state:
 
@@ -355,6 +360,9 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 \ structures in the target image. They resemble their counterparts
 \ of a regular Forth system, except that they interact with the target
 \ image via the words defined in the host wordlist above.
+\ Some of the words are defined so that they either get compiled into the
+\ target word or invoke a host specific word. The behavior is controlled
+\ via the `tstate` variable.
 
 : immediate get-current target-wordlist set-current immediate set-current
             timmediate
@@ -366,6 +374,8 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
                else t,call
                then ;
 : ,         tstate @ if s" ," tfwdref else t, then ;
+: '         tstate @ if s" '" tfwdref else t' then ;
+: create    tstate @ if s" create" tfwdref else t: t,dovar then ;
 
 : if        t,?branch there tcell tallot ;
 : else      t,branch there tcell tallot there rot t! ;
@@ -398,6 +408,7 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : constant  t: t,docon t, ;
 : variable  t: t,docon tcell talloc ;
 : buffer:   t: t,docon talloc ;
+
 
 \ ### Create words in the target image
 \
