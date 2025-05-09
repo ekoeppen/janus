@@ -47,6 +47,7 @@ set-current
             base @ >r hex
             0line 0sum +: 2 +2h 0 +4h 4 +2h #16 rshift +4h +sum +eol .line
             .lines
+            mkend .line
             r> base ! ;
 
 \ End the hex output.

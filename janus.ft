@@ -150,6 +150,10 @@ variable tvp
 
 variable tlast 0 tlast !
 
+\ Offset of the last allocated user variable
+
+variable tuser 0 tuser !
+
 \ State of the target compiler, this can be controlled while parsing target
 \ words. A state of one means numbers are compiled as literals into the target
 \ word, whereas zero leaves the number on the host stack to allow compiling
@@ -251,6 +255,11 @@ defer t,next
 
 defer t,call
 
+\ Compile adding or updating a branch target into a word:
+
+defer t,target
+defer t!target
+
 \ Compile the `LIT` action into the code (pushing the next word to the stack):
 
 defer t,lit
@@ -264,6 +273,10 @@ defer t,?branch
 
 defer t,dodoes
 
+\ Add the action for a USER variable
+
+defer t,douser
+
 \ The target Forth can implement different header formats, such as normal
 \ headers, or headerless words. The words below interact with the target
 \ image: `thead` creates a word header in the image, `tlink>` (equivalent to
@@ -273,6 +286,12 @@ defer t,dodoes
 defer thead
 defer tlink>
 defer timmediate
+
+\ Set default actions for deferred words:
+
+' t, is t,target
+' t, is t,call 
+' t! is t!target
 
 \ ### Word creation
 \
@@ -370,7 +389,7 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 
 : postpone  parse-name target-wordlist search-wordlist dup 0= throw
             swap >body @ swap
-            0< if t,lit t, s" ,call" tfwdref
+            0< if t,lit t,target s" ,call" tfwdref
                else t,call
                then ;
 : ,         tstate @ if s" ," tfwdref else t, then ;
@@ -378,25 +397,26 @@ create (squote)$ char ( c, char s c, char " c, char ) c,
 : create    tstate @ if s" create" tfwdref else t: t,dovar then ;
 
 : if        t,?branch there tcell tallot ;
-: else      t,branch there tcell tallot there rot t! ;
-: then      there swap t! ;
+: else      t,branch there tcell tallot there rot t!target ;
+: then      there swap t!target ;
 : begin     there ;
 : while     t,?branch there tcell tallot swap ;
-: again     t,branch t, ;
-: until     t,?branch t, ;
-: repeat    t,branch t, there swap t! ;
+: again     t,branch t,target ;
+: until     t,?branch t,target ;
+: repeat    t,branch t,target there swap t!target ;
 : ahead     t,branch there tcell tallot ;
 : does>     t,dodoes ;
 : for       s" >r" tfwdref there ;
-: next      s" (next)" tfwdref t, ;
+: next      s" (next)" tfwdref t,target ;
 : aft       drop t,branch there tcell tallot there swap ;
 : recurse   tlast @ tlink> t,call ;
 : do        s" (do)" tfwdref there ;
-: loop      s" (loop)" tfwdref t,?branch t, ;
-: +loop     s" (+loop)" tfwdref t,?branch t, ;
+: loop      s" (loop)" tfwdref t,?branch t,target ;
+: +loop     s" (+loop)" tfwdref t,?branch t,target ;
+: user      t: t,douser tuser dup @ dup t, tcell + swap ! s" up" tfwdref ;
 : (         [char] ) word drop ;
 : \         refill drop ;
-: [']       t,lit t' t, ;
+: [']       t,lit t' t,target ;
 : [char]    t,lit char t, ;
 : s"        (squote)$ 4 tfwdref
             $22 word dup dup c@ 1+ there #target + trom - swap cmove
